@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 16%;
+    --border: 240 8% 88%;
+    --input: 240 8% 88%;
+    --ring: 137 90% 28%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: Roboto, system-ui, -apple-system, Segoe UI, sans-serif;
+  }
+}
