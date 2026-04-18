@@ -3,15 +3,21 @@ import Home from '@/pages/Marketplace/Home';
 import ProductDetail from '@/pages/Marketplace/ProductDetail';
 import SignUpForm from '@/pages/Auth/SignUpForm';
 import FarmerDashboard from '@/pages/Dashboard/FarmerDashboard';
+import MarketplaceLayout from '@/layouts/MarketplaceLayout';
 
 const router = createBrowserRouter([
   {
-    path: '/',
-    element: <Home />,
-  },
-  {
-    path: '/products/:productId',
-    element: <ProductDetail />,
+    element: <MarketplaceLayout />,
+    children: [
+      {
+        path: '/',
+        element: <Home />,
+      },
+      {
+        path: '/products/:productId',
+        element: <ProductDetail />,
+      },
+    ],
   },
   {
     path: '/signup',
