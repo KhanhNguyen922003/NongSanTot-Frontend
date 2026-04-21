@@ -1,157 +1,222 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
-import { UserRole } from '../../shared/types';
-import { auth } from '../../../firebase.config';
+import { useState } from "react";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { updateProfile } from "firebase/auth";
+import { Link, useNavigate } from "react-router-dom";
+import { useForm, type Resolver } from "react-hook-form";
+import { Loader2 } from "lucide-react";
+import { auth } from "../../../firebase.config";
+import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
+import { AuthPageChrome } from "@/components/auth/AuthPageChrome";
+import { FormInput } from "@/components/form/FormInput";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { usePhoneOtpAuth } from "@/hooks/usePhoneOtpAuth";
+import {
+  signUpSchema,
+  smsOtpCodeSchema,
+  type SignUpFormValues,
+} from "@/lib/auth/authSchemas";
+import { isRecaptchaVisible } from "@/lib/auth/recaptcha";
 
-const SignUpForm: React.FC = () => {
-  const [step, setStep] = useState(1);
-  const [role, setRole] = useState<UserRole>(UserRole.BUYER);
-  const [otpCode, setOtpCode] = useState('');
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
-  const [message, setMessage] = useState('');
-  const [isSendingOtp, setIsSendingOtp] = useState(false);
-  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
-  const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
-  const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
-    shopName: '',
-    displayAddress: ''
+const RECAPTCHA_CONTAINER_ID = "recaptcha-signup";
+
+const SignUpForm = () => {
+  const navigate = useNavigate();
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const {
+    confirmationResult,
+    sending,
+    verifying,
+    sendOtp,
+    confirmOtp,
+    resetOtpSession,
+  } = usePhoneOtpAuth(RECAPTCHA_CONTAINER_ID);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    getValues,
+    setError,
+    formState: { errors },
+  } = useForm<SignUpFormValues>({
+    defaultValues: {
+      fullName: "",
+      phone: "",
+      otp: "",
+    },
+    resolver: yupResolver(signUpSchema) as Resolver<SignUpFormValues>,
   });
 
-  useEffect(() => {
-    if (!recaptchaRef.current) {
-      recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
-      });
+  const setErr = (text: string) => setMessage({ type: "error", text });
+  const setOk = (text: string) => setMessage({ type: "success", text });
+
+  const onSendOtp = handleSubmit(async (values) => {
+    setMessage(null);
+    setValue("otp", "");
+    resetOtpSession();
+    const res = await sendOtp(values.phone);
+    if (res.ok === false) {
+      setErr(res.message);
+      return;
     }
+    setOk("Đã gửi mã OTP. Vui lòng kiểm tra tin nhắn.");
+  });
 
-    return () => {
-      recaptchaRef.current?.clear();
-      recaptchaRef.current = null;
-    };
-  }, []);
-
-  const normalizePhoneNumber = (phone: string) => {
-    const cleaned = phone.replace(/\s+/g, '');
-    if (cleaned.startsWith('+')) return cleaned;
-    if (cleaned.startsWith('0')) return `+84${cleaned.slice(1)}`;
-    return cleaned;
-  };
-
-  const handleSendOtp = async () => {
+  const onVerifyComplete = async () => {
+    setMessage(null);
     try {
-      setMessage('');
-      setIsSendingOtp(true);
-      const appVerifier = recaptchaRef.current;
-      if (!appVerifier) {
-        setMessage('reCAPTCHA is not ready. Please try again.');
+      await smsOtpCodeSchema.validate({ otp: getValues("otp") });
+    } catch (e) {
+      console.log("error 0", e);
+      if (e instanceof yup.ValidationError) {
+        console.log("error 1", e.errors);
+        setError("otp", { message: e.errors[0] ?? "Mã OTP không hợp lệ" });
+      }
+      return;
+    }
+    const res = await confirmOtp(getValues("otp") ?? "");
+    console.log("res", res);
+    if (res.ok === false) {
+      setErr(
+        res.message.includes("(auth/invalid-verification-code)")
+          ? "Mã OTP không hợp lệ. Vui lòng kiểm tra lại."
+          : res.message,
+      );
+      return;
+    }
+    if (!auth.currentUser) {
+      setErr("Không lấy được phiên đăng nhập sau OTP.");
+      return;
+    }
+    const name = getValues("fullName")?.trim();
+    if (name) {
+      try {
+        await updateProfile(auth.currentUser, { displayName: name });
+      } catch (err) {
+        const e = err as Error;
+        setErr(e.message || "Không cập nhật được tên hiển thị.");
         return;
       }
-
-      const phone = normalizePhoneNumber(formData.phone);
-      if (!phone.startsWith('+')) {
-        setMessage('Phone number must be in E.164 format, e.g. +84901234567');
-        return;
-      }
-
-      const result = await signInWithPhoneNumber(auth, phone, appVerifier);
-      console.log('result', result);
-      setConfirmationResult(result);
-      setMessage('OTP has been sent. Please enter the code.');
-    } catch (error) {
-      const err = error as Error;
-      setMessage(err.message || 'Failed to send OTP.');
-    } finally {
-      setIsSendingOtp(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!confirmationResult) {
-      setMessage('Please send OTP first.');
-      return;
     }
 
-    try {
-      setMessage('');
-      setIsVerifyingOtp(true);
-      await confirmationResult.confirm(otpCode);
-      setIsPhoneVerified(true);
-      setMessage('Phone number verified successfully.');
-    } catch (error) {
-      const err = error as Error;
-      setMessage(err.message || 'Invalid OTP code.');
-    } finally {
-      setIsVerifyingOtp(false);
-    }
-  };
-
-  const handleNext = () => {
-    if (!isPhoneVerified) {
-      setMessage('Please verify your phone number before continuing.');
-      return;
-    }
-
-    setStep(step + 1);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isPhoneVerified) {
-      setMessage('Please verify your phone number first.');
-      return;
-    }
-
-    console.log('Submit:', { role, ...formData });
+    console.log("auth.currentUser", auth.currentUser);
+    setOk("Đăng ký thành công.");
+    navigate("/", { replace: true });
   };
 
   return (
-    <div className="signup-form max-w-md mx-auto p-4 border rounded shadow">
-      <h2 className="text-xl font-bold mb-4">Sign Up - Step {step}</h2>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        {step === 1 && (
-          <>
-            <input className="border p-2" type="text" placeholder="Full Name" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} required />
-            <input className="border p-2" type="text" placeholder="Phone" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required />
-            <select className="border p-2" value={role} onChange={e => setRole(e.target.value as UserRole)}>
-              <option value={UserRole.BUYER}>Buyer</option>
-              <option value={UserRole.FARMER}>Farmer</option>
-            </select>
+    <AuthPageChrome>
+      <Card className="w-full max-w-md rounded-lg border bg-white shadow-card">
+        <CardHeader className="space-y-1 pb-4">
+          <CardTitle className="text-xl text-[#27272a]">Đăng ký</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Tạo tài khoản bằng số điện thoại và mã OTP (Firebase).{" "}
+            <Link
+              to="/signin"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Đã có tài khoản? Đăng nhập
+            </Link>
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {message ? (
+            <AuthFormMessage type={message.type} text={message.text} />
+          ) : null}
 
-            <button className="bg-indigo-500 text-white p-2 rounded disabled:opacity-60" type="button" onClick={handleSendOtp} disabled={isSendingOtp}>
-              {isSendingOtp ? 'Sending OTP...' : 'Send OTP'}
-            </button>
+          <div className="space-y-4">
+            <form className="space-y-4" onSubmit={onSendOtp} noValidate>
+              <FormInput
+                id="su-name"
+                label="Tên hiển thị (tùy chọn)"
+                placeholder="Nguyễn Văn A"
+                error={errors.fullName?.message}
+                {...register("fullName")}
+              />
+              <FormInput
+                id="su-phone"
+                label="Số điện thoại"
+                placeholder="0901234567"
+                autoComplete="tel"
+                error={errors.phone?.message}
+                {...register("phone")}
+              />
 
-            {confirmationResult && (
-              <>
-                <input className="border p-2" type="text" placeholder="Enter OTP code" value={otpCode} onChange={e => setOtpCode(e.target.value)} />
-                <button className="bg-purple-500 text-white p-2 rounded disabled:opacity-60" type="button" onClick={handleVerifyOtp} disabled={isVerifyingOtp}>
-                  {isVerifyingOtp ? 'Verifying...' : 'Verify OTP'}
-                </button>
-              </>
-            )}
+              <div
+                id={RECAPTCHA_CONTAINER_ID}
+                className={
+                  isRecaptchaVisible()
+                    ? "flex min-h-[78px] justify-center py-2"
+                    : undefined
+                }
+              />
 
-            {isPhoneVerified && <p className="text-sm text-green-600">Phone verified. You can continue.</p>}
-            {message && <p className="text-sm text-gray-700">{message}</p>}
+              <Button
+                type="submit"
+                variant="secondary"
+                className="w-full"
+                disabled={sending}
+              >
+                {sending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Đang gửi mã…
+                  </>
+                ) : (
+                  "Gửi mã OTP"
+                )}
+              </Button>
+            </form>
 
-            <button className="bg-blue-500 text-white p-2 rounded" type="button" onClick={handleNext}>Next</button>
-          </>
-        )}
-        {step === 2 && role === UserRole.FARMER && (
-          <>
-            <input className="border p-2" type="text" placeholder="Shop Name" value={formData.shopName} onChange={e => setFormData({...formData, shopName: e.target.value})} required />
-            <input className="border p-2" type="text" placeholder="Shop Address" value={formData.displayAddress} onChange={e => setFormData({...formData, displayAddress: e.target.value})} required />
-            <button className="bg-green-500 text-white p-2 rounded" type="submit">Complete Sign Up</button>
-          </>
-        )}
-        {step === 2 && role === UserRole.BUYER && (
-          <button className="bg-green-500 text-white p-2 rounded" type="submit">Complete Sign Up</button>
-        )}
-      </form>
-      <div id="recaptcha-container" />
-    </div>
+            {confirmationResult ? (
+              <div className="space-y-4 border-t pt-4">
+                <FormInput
+                  id="su-otp"
+                  label="Mã OTP"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="6 chữ số"
+                  autoComplete="one-time-code"
+                  error={errors.otp?.message}
+                  {...register("otp")}
+                />
+                <Button
+                  type="button"
+                  className="w-full"
+                  disabled={verifying}
+                  onClick={() => void onVerifyComplete()}
+                >
+                  {verifying ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Đang xác thực…
+                    </>
+                  ) : (
+                    "Xác thực OTP & hoàn tất"
+                  )}
+                </Button>
+              </div>
+            ) : null}
+          </div>
+
+          <p className="border-t pt-4 text-center text-xs text-muted-foreground">
+            Muốn mở cửa hàng bán nông sản? Sau khi đăng nhập, dùng{" "}
+            <Link
+              to="/seller/register"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Đăng ký bán hàng
+            </Link>{" "}
+            trên trang chủ.
+          </p>
+        </CardContent>
+      </Card>
+    </AuthPageChrome>
   );
 };
 

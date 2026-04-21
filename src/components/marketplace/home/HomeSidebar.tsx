@@ -1,4 +1,5 @@
 import { Sparkles, Store } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MarketplaceCategory, MarketplaceFilter } from '@/features/marketplace/data';
 
@@ -46,9 +47,14 @@ export const HomeSidebar = ({ categories, quickFilters }: HomeSidebarProps) => {
       </Card>
 
       <Card className="rounded-lg shadow-card">
-        <CardContent className="flex items-center gap-2 p-4 text-sm text-primary">
-          <Store className="h-4 w-4" />
-          Bán hàng cùng Xanh Hi!
+        <CardContent className="p-0">
+          <Link
+            to="/seller/register"
+            className="flex items-center gap-2 p-4 text-sm font-medium text-primary transition hover:bg-primary/5"
+          >
+            <Store className="h-4 w-4 shrink-0" />
+            Đăng ký bán hàng
+          </Link>
         </CardContent>
       </Card>
     </aside>

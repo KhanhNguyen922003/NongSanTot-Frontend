@@ -62,9 +62,17 @@ export function MarketplaceNavbar() {
 
         <div className="flex items-center gap-2 text-sm">
           <Button asChild variant="ghost" className="gap-2">
-            <Link to="/signup"><UserPlus className="h-4 w-4" />Đăng ký</Link>
+            <Link to="/signup" className="inline-flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              Đăng ký
+            </Link>
           </Button>
-          <Button variant="ghost" className="gap-2"><LogIn className="h-4 w-4" />Đăng nhập</Button>
+          <Button asChild variant="ghost" className="gap-2">
+            <Link to="/signin" className="inline-flex items-center gap-2">
+              <LogIn className="h-4 w-4" />
+              Đăng nhập
+            </Link>
+          </Button>
           <span className="mx-1 h-6 w-px bg-gray-200" />
           <Button size="icon" variant="ghost"><ShoppingCart className="h-5 w-5 text-primary" /></Button>
         </div>

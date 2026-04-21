@@ -2,6 +2,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Home from '@/pages/Marketplace/Home';
 import ProductDetail from '@/pages/Marketplace/ProductDetail';
 import SignUpForm from '@/pages/Auth/SignUpForm';
+import SignInForm from '@/pages/Auth/SignInForm';
+import CreateShopForm from '@/pages/Seller/CreateShopForm';
 import FarmerDashboard from '@/pages/Dashboard/FarmerDashboard';
 import MarketplaceLayout from '@/layouts/MarketplaceLayout';
 
@@ -22,6 +24,14 @@ const router = createBrowserRouter([
   {
     path: '/signup',
     element: <SignUpForm />,
+  },
+  {
+    path: '/signin',
+    element: <SignInForm />,
+  },
+  {
+    path: '/seller/register',
+    element: <CreateShopForm />,
   },
   {
     path: '/farmer/dashboard',
