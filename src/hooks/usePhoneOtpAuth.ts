@@ -15,22 +15,45 @@ export function usePhoneOtpAuth(recaptchaContainerId: string) {
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
 
   useEffect(() => {
     const size = getRecaptchaWidgetSize();
-    recaptchaRef.current = new RecaptchaVerifier(auth, recaptchaContainerId, { size });
+    const verifier = new RecaptchaVerifier(auth, recaptchaContainerId, {
+      size,
+      callback: () => setCaptchaVerified(true),
+      'expired-callback': () => setCaptchaVerified(false),
+    });
+    recaptchaRef.current = verifier;
+
+    if (size === 'normal') {
+      verifier.render().catch(console.error);
+    }
+
     return () => {
-      recaptchaRef.current?.clear();
+      verifier.clear();
       recaptchaRef.current = null;
+      // Dọn dẹp DOM phòng trường hợp React StrictMode unmount nhanh khi render() chưa xong
+      const container = document.getElementById(recaptchaContainerId);
+      if (container) {
+        container.innerHTML = '';
+      }
     };
   }, [recaptchaContainerId]);
 
   const getVerifier = useCallback(() => {
     if (!recaptchaRef.current) {
-      recaptchaRef.current = new RecaptchaVerifier(auth, recaptchaContainerId, {
-        size: getRecaptchaWidgetSize(),
+      const size = getRecaptchaWidgetSize();
+      const verifier = new RecaptchaVerifier(auth, recaptchaContainerId, {
+        size,
+        callback: () => setCaptchaVerified(true),
+        'expired-callback': () => setCaptchaVerified(false),
       });
+      recaptchaRef.current = verifier;
+      if (size === 'normal') {
+        verifier.render().catch(console.error);
+      }
     }
     return recaptchaRef.current;
   }, [recaptchaContainerId]);
@@ -46,6 +69,8 @@ export function usePhoneOtpAuth(recaptchaContainerId: string) {
         const verifier = getVerifier();
         const result = await signInWithPhoneNumber(auth, phone, verifier);
         setConfirmationResult(result);
+        // Token captcha đã được tiêu thụ ở lần gửi OTP này.
+        setCaptchaVerified(false);
         return { ok: true };
       } catch (e) {
         const err = e as Error;
@@ -91,5 +116,6 @@ export function usePhoneOtpAuth(recaptchaContainerId: string) {
     sendOtp,
     confirmOtp,
     resetOtpSession,
+    captchaVerified,
   };
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { updateProfile } from "firebase/auth";
@@ -17,7 +17,11 @@ import {
   smsOtpCodeSchema,
   type SignUpFormValues,
 } from "@/lib/auth/authSchemas";
-import { isRecaptchaVisible } from "@/lib/auth/recaptcha";
+import { getRecaptchaWidgetSize, isRecaptchaVisible } from "@/lib/auth/recaptcha";
+import { queryKeys } from "@/constants/queryKeys";
+import { queryClient } from "@/queries";
+import { fetchAuthMe } from "@/queries/Auth/useAuth";
+import useAuthStore from "@/stores/auth.store";
 
 const RECAPTCHA_CONTAINER_ID = "recaptcha-signup";
 
@@ -27,6 +31,7 @@ const SignUpForm = () => {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [countdown, setCountdown] = useState(0);
   const {
     confirmationResult,
     sending,
@@ -34,7 +39,16 @@ const SignUpForm = () => {
     sendOtp,
     confirmOtp,
     resetOtpSession,
+    captchaVerified,
   } = usePhoneOtpAuth(RECAPTCHA_CONTAINER_ID);
+  const needsCaptchaCheck = getRecaptchaWidgetSize() === "normal";
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
 
   const {
     register,
@@ -59,12 +73,17 @@ const SignUpForm = () => {
     setMessage(null);
     setValue("otp", "");
     resetOtpSession();
+    if (needsCaptchaCheck && !captchaVerified) {
+      setErr("Vui lòng hoàn tất reCAPTCHA trước khi gửi OTP.");
+      return;
+    }
     const res = await sendOtp(values.phone);
     if (res.ok === false) {
       setErr(res.message);
       return;
     }
     setOk("Đã gửi mã OTP. Vui lòng kiểm tra tin nhắn.");
+    setCountdown(60);
   });
 
   const onVerifyComplete = async () => {
@@ -72,15 +91,12 @@ const SignUpForm = () => {
     try {
       await smsOtpCodeSchema.validate({ otp: getValues("otp") });
     } catch (e) {
-      console.log("error 0", e);
       if (e instanceof yup.ValidationError) {
-        console.log("error 1", e.errors);
         setError("otp", { message: e.errors[0] ?? "Mã OTP không hợp lệ" });
       }
       return;
     }
     const res = await confirmOtp(getValues("otp") ?? "");
-    console.log("res", res);
     if (res.ok === false) {
       setErr(
         res.message.includes("(auth/invalid-verification-code)")
@@ -104,9 +120,21 @@ const SignUpForm = () => {
       }
     }
 
-    console.log("auth.currentUser", auth.currentUser);
+    const authMeData = await queryClient.fetchQuery({
+      queryKey: queryKeys.authMe,
+      queryFn: fetchAuthMe,
+    });
+    useAuthStore.getState().setUser(authMeData.user);
     setOk("Đăng ký thành công.");
     navigate("/", { replace: true });
+  };
+
+  const onChangePhone = () => {
+    resetOtpSession();
+    setCountdown(0);
+    setMessage(null);
+    setValue("otp", "");
+    setError("otp", { message: undefined });
   };
 
   return (
@@ -117,7 +145,7 @@ const SignUpForm = () => {
           <p className="text-sm text-muted-foreground">
             Tạo tài khoản bằng số điện thoại và mã OTP (Firebase).{" "}
             <Link
-              to="/signin"
+              to="/dang-nhap"
               className="font-medium text-primary underline-offset-4 hover:underline"
             >
               Đã có tài khoản? Đăng nhập
@@ -135,6 +163,7 @@ const SignUpForm = () => {
                 id="su-name"
                 label="Tên hiển thị (tùy chọn)"
                 placeholder="Nguyễn Văn A"
+                disabled={!!confirmationResult}
                 error={errors.fullName?.message}
                 {...register("fullName")}
               />
@@ -143,6 +172,7 @@ const SignUpForm = () => {
                 label="Số điện thoại"
                 placeholder="0901234567"
                 autoComplete="tel"
+                disabled={!!confirmationResult}
                 error={errors.phone?.message}
                 {...register("phone")}
               />
@@ -150,27 +180,38 @@ const SignUpForm = () => {
               <div
                 id={RECAPTCHA_CONTAINER_ID}
                 className={
-                  isRecaptchaVisible()
+                  isRecaptchaVisible() && (!confirmationResult || countdown === 0)
                     ? "flex min-h-[78px] justify-center py-2"
-                    : undefined
+                    : "hidden"
                 }
               />
 
-              <Button
-                type="submit"
-                variant="secondary"
-                className="w-full"
-                disabled={sending}
-              >
-                {sending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Đang gửi mã…
-                  </>
-                ) : (
-                  "Gửi mã OTP"
-                )}
-              </Button>
+              {!confirmationResult || countdown === 0 ? (
+                <>
+                  <Button
+                    type="submit"
+                    variant="secondary"
+                    className="w-full"
+                    disabled={sending}
+                  >
+                    {sending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Đang gửi mã…
+                      </>
+                    ) : confirmationResult ? (
+                      "Gửi lại mã OTP"
+                    ) : (
+                      "Gửi mã OTP"
+                    )}
+                  </Button>
+                  {needsCaptchaCheck && !captchaVerified ? (
+                    <p className="text-xs text-muted-foreground">
+                      Bạn cần tick "I'm not a robot" trước khi gửi OTP.
+                    </p>
+                  ) : null}
+                </>
+              ) : null}
             </form>
 
             {confirmationResult ? (
@@ -200,6 +241,20 @@ const SignUpForm = () => {
                     "Xác thực OTP & hoàn tất"
                   )}
                 </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full" 
+                  disabled={verifying} 
+                  onClick={onChangePhone}
+                >
+                  Sửa lại thông tin đăng ký
+                </Button>
+                {countdown > 0 ? (
+                  <p className="text-center text-sm text-muted-foreground mt-2">
+                    Gửi lại mã sau {countdown}s
+                  </p>
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -207,7 +262,7 @@ const SignUpForm = () => {
           <p className="border-t pt-4 text-center text-xs text-muted-foreground">
             Muốn mở cửa hàng bán nông sản? Sau khi đăng nhập, dùng{" "}
             <Link
-              to="/seller/register"
+              to="/dang-ky-ban-hang"
               className="font-medium text-primary underline-offset-4 hover:underline"
             >
               Đăng ký bán hàng

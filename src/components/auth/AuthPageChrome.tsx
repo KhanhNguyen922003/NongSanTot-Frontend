@@ -17,7 +17,7 @@ export function AuthPageChrome({ children }: AuthPageChromeProps) {
               <Leaf className="h-5 w-5" />
             </span>
             <span className="text-lg font-semibold tracking-tight">
-              Xanh <span className="text-secondary">Hi</span>
+              Nông Sản <span className="text-secondary">Tốt</span>
             </span>
           </Link>
           <Button asChild variant="ghost" size="sm" className="text-[#27272a]">

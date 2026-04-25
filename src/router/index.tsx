@@ -16,26 +16,26 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: '/products/:productId',
+        path: '/san-pham/:productId',
         element: <ProductDetail />,
+      },
+      {
+        path: '/dang-ky-ban-hang',
+        element: <CreateShopForm />,
+      },
+      {
+        path: '/thong-ke-cua-hang',
+        element: <FarmerDashboard />,
       },
     ],
   },
   {
-    path: '/signup',
+    path: '/dang-ky',
     element: <SignUpForm />,
   },
   {
-    path: '/signin',
+    path: '/dang-nhap',
     element: <SignInForm />,
-  },
-  {
-    path: '/seller/register',
-    element: <CreateShopForm />,
-  },
-  {
-    path: '/farmer/dashboard',
-    element: <FarmerDashboard />,
   },
   // Thêm các route khác ở đây
 ]);

@@ -43,10 +43,12 @@ export type SignInOtpFormValues = {
 /** Tạo shop */
 export const shopSchema = yup.object({
   shopName: yup.string().trim().min(2, 'Nhập tên cửa hàng').max(120).required(),
+  description: yup.string().trim().max(1000).optional(),
   displayAddress: yup.string().trim().min(5, 'Nhập địa chỉ hiển thị').max(300).required(),
 });
 
 export type ShopFormValues = {
   shopName: string;
+  description?: string;
   displayAddress: string;
 };

@@ -50,7 +50,7 @@ export function ProductCard({
           </Badge>
         </div>
         <Button asChild className="h-8 w-full">
-          <Link to={`/products/${product.id}`}>Xem chi tiết</Link>
+          <Link to={`/san-pham/${product.id}`}>Xem chi tiết</Link>
         </Button>
       </CardContent>
     </Card>

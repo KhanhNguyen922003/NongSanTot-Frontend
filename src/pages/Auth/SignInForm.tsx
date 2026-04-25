@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -11,7 +11,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { usePhoneOtpAuth } from '@/hooks/usePhoneOtpAuth';
 import { signInOtpSchema, smsOtpCodeSchema, type SignInOtpFormValues } from '@/lib/auth/authSchemas';
-import { isRecaptchaVisible } from '@/lib/auth/recaptcha';
+import { getRecaptchaWidgetSize, isRecaptchaVisible } from '@/lib/auth/recaptcha';
+import { queryKeys } from '@/constants/queryKeys';
+import { queryClient } from '@/queries';
+import { fetchAuthMe } from '@/queries/Auth/useAuth';
+import useAuthStore from '@/stores/auth.store';
 
 const RECAPTCHA_CONTAINER_ID = 'recaptcha-signin';
 
@@ -21,7 +25,16 @@ const SignInForm = () => {
   const nextPath = searchParams.get('next') || '/';
 
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const { confirmationResult, sending, verifying, sendOtp, confirmOtp, resetOtpSession } = usePhoneOtpAuth(RECAPTCHA_CONTAINER_ID);
+  const [countdown, setCountdown] = useState(0);
+  const { confirmationResult, sending, verifying, sendOtp, confirmOtp, resetOtpSession, captchaVerified } = usePhoneOtpAuth(RECAPTCHA_CONTAINER_ID);
+  const needsCaptchaCheck = getRecaptchaWidgetSize() === 'normal';
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
 
   const form = useForm<SignInOtpFormValues>({
     resolver: yupResolver(signInOtpSchema) as Resolver<SignInOtpFormValues>,
@@ -36,12 +49,17 @@ const SignInForm = () => {
     form.clearErrors('otp');
     form.setValue('otp', '');
     resetOtpSession();
+    if (needsCaptchaCheck && !captchaVerified) {
+      setErr('Vui lòng hoàn tất reCAPTCHA trước khi gửi OTP.');
+      return;
+    }
     const res = await sendOtp(values.phone);
     if (res.ok === false) {
       setErr(res.message);
       return;
     }
     setOk('Đã gửi mã OTP. Vui lòng kiểm tra tin nhắn.');
+    setCountdown(60);
   });
 
   const onVerifyOtp = async () => {
@@ -59,8 +77,21 @@ const SignInForm = () => {
       setErr(res.message);
       return;
     }
+    const authMeData = await queryClient.fetchQuery({
+      queryKey: queryKeys.authMe,
+      queryFn: fetchAuthMe,
+    });
+    useAuthStore.getState().setUser(authMeData.user);
     setOk('Đăng nhập thành công.');
     navigate(nextPath, { replace: true });
+  };
+
+  const onChangePhone = () => {
+    resetOtpSession();
+    setCountdown(0);
+    setMessage(null);
+    form.setValue('otp', '');
+    form.clearErrors('otp');
   };
 
   return (
@@ -70,7 +101,7 @@ const SignInForm = () => {
           <CardTitle className="text-xl text-[#27272a]">Đăng nhập</CardTitle>
           <p className="text-sm text-muted-foreground">
             Đăng nhập bằng mã OTP gửi qua SMS.{' '}
-            <Link to="/signup" className="font-medium text-primary underline-offset-4 hover:underline">
+            <Link to="/dang-ky" className="font-medium text-primary underline-offset-4 hover:underline">
               Chưa có tài khoản? Đăng ký
             </Link>
           </p>
@@ -84,25 +115,39 @@ const SignInForm = () => {
               label="Số điện thoại"
               placeholder="0901234567"
               autoComplete="tel"
+              disabled={!!confirmationResult}
               error={form.formState.errors.phone?.message}
               {...form.register('phone')}
             />
 
             <div
               id={RECAPTCHA_CONTAINER_ID}
-              className={isRecaptchaVisible() ? 'flex min-h-[78px] justify-center py-2' : undefined}
+              className={
+                isRecaptchaVisible() && (!confirmationResult || countdown === 0)
+                  ? 'flex min-h-[78px] justify-center py-2'
+                  : 'hidden'
+              }
             />
 
-            <Button type="button" variant="secondary" className="w-full" disabled={sending} onClick={onSendOtp}>
-              {sending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Đang gửi mã…
-                </>
-              ) : (
-                'Gửi mã OTP'
-              )}
-            </Button>
+            {!confirmationResult || countdown === 0 ? (
+              <>
+                <Button type="button" variant="secondary" className="w-full" disabled={sending} onClick={onSendOtp}>
+                  {sending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Đang gửi mã…
+                    </>
+                  ) : confirmationResult ? (
+                    'Gửi lại mã OTP'
+                  ) : (
+                    'Gửi mã OTP'
+                  )}
+                </Button>
+                {needsCaptchaCheck && !captchaVerified ? (
+                  <p className="text-xs text-muted-foreground">Bạn cần tick "I'm not a robot" trước khi gửi OTP.</p>
+                ) : null}
+              </>
+            ) : null}
 
             {confirmationResult ? (
               <>
@@ -126,6 +171,14 @@ const SignInForm = () => {
                     'Xác thực & đăng nhập'
                   )}
                 </Button>
+                <Button type="button" variant="outline" className="w-full" disabled={verifying} onClick={onChangePhone}>
+                  Đổi số điện thoại
+                </Button>
+                {countdown > 0 ? (
+                  <p className="text-center text-sm text-muted-foreground mt-2">
+                    Gửi lại mã sau {countdown}s
+                  </p>
+                ) : null}
               </>
             ) : null}
           </form>

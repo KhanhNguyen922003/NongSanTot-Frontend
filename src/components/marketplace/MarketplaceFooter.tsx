@@ -1,4 +1,4 @@
-const customerLinks = ['Câu hỏi thường gặp', 'Trung tâm hỗ trợ', 'Hướng dẫn đặt hàng', 'Hướng dẫn bán hàng', 'Liên hệ Xanh Hi'];
+const customerLinks = ['Câu hỏi thường gặp', 'Trung tâm hỗ trợ', 'Hướng dẫn đặt hàng', 'Hướng dẫn bán hàng', 'Liên hệ Nông Sản Tốt'];
 const aboutLinks = ['Giới thiệu', 'Tuyển dụng', 'Chính sách bảo mật', 'Điều kiện vận chuyển', 'Chính sách đổi trả'];
 
 export function MarketplaceFooter() {
@@ -15,7 +15,7 @@ export function MarketplaceFooter() {
             </ul>
           </div>
           <div>
-            <h4 className="mb-3 text-sm font-semibold uppercase">Về Xanh Hi</h4>
+            <h4 className="mb-3 text-sm font-semibold uppercase">Về Nông Sản Tốt</h4>
             <ul className="space-y-2 text-sm text-[#27272a]">
               {aboutLinks.map((item) => (
                 <li key={item}>{item}</li>
@@ -42,8 +42,8 @@ export function MarketplaceFooter() {
           </div>
         </div>
         <div className="pt-4 text-xs text-[#27272a]">
-          <p className="mb-2 font-semibold uppercase">Xanh Hi - Chợ nông sản online</p>
-          <p>Từ nông trại đến bàn ăn, Xanh Hi mang nông sản tươi sạch và đặc sản vùng miền tới người dùng với trải nghiệm mua sắm nhanh và minh bạch.</p>
+          <p className="mb-2 font-semibold uppercase">Nông Sản Tốt - Chợ nông sản online</p>
+          <p>Từ nông trại đến bàn ăn, Nông Sản Tốt mang nông sản tươi sạch và đặc sản vùng miền tới người dùng với trải nghiệm mua sắm nhanh và minh bạch.</p>
         </div>
       </div>
     </footer>

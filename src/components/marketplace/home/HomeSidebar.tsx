@@ -49,7 +49,7 @@ export const HomeSidebar = ({ categories, quickFilters }: HomeSidebarProps) => {
       <Card className="rounded-lg shadow-card">
         <CardContent className="p-0">
           <Link
-            to="/seller/register"
+            to="/dang-ky-ban-hang"
             className="flex items-center gap-2 p-4 text-sm font-medium text-primary transition hover:bg-primary/5"
           >
             <Store className="h-4 w-4 shrink-0" />

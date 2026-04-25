@@ -1,11 +1,36 @@
-import { Bell, CircleHelp, Globe, LogIn, Search, ShoppingCart, UserPlus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Bell, CircleHelp, Globe, LogIn, Search, ShoppingCart, UserPlus, LogOut, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { signOut } from 'firebase/auth';
+import { auth } from '../../../firebase.config';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import useAuthStore from '@/stores/auth.store';
+
+const getInitials = (name?: string) => {
+  if (!name) return 'U';
+  const parts = name.trim().split(' ').filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return parts[0].substring(0, 2).toUpperCase();
+};
 
 export function MarketplaceNavbar() {
+  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error', error);
+    }
+  };
+
   return (
     <header className="border-b bg-white">
       <div className="border-b bg-[#f7f7f7] text-xs">
@@ -13,7 +38,7 @@ export function MarketplaceNavbar() {
           <div className="flex items-center gap-3 text-[#27272a]">
             <span>Kênh người bán</span>
             <span className="h-3 w-px bg-gray-300" />
-            <span>Trở thành người bán Xanh Hi</span>
+            <span>Trở thành người bán Nông Sản Tốt</span>
             <span className="h-3 w-px bg-gray-300" />
             <span>Tải ứng dụng</span>
           </div>
@@ -39,7 +64,7 @@ export function MarketplaceNavbar() {
 
       <div className="container flex h-20 items-center justify-between gap-6">
         <Link to="/" className="min-w-[160px]">
-          <p className="text-3xl font-bold leading-none text-primary">Xanh <span className="text-secondary">Hi</span></p>
+          <p className="text-2xl font-bold leading-none text-primary">Nông Sản <span className="text-secondary">Tốt</span></p>
           <p className="text-xs text-secondary">Nông sản online</p>
         </Link>
 
@@ -61,18 +86,47 @@ export function MarketplaceNavbar() {
         </div>
 
         <div className="flex items-center gap-2 text-sm">
-          <Button asChild variant="ghost" className="gap-2">
-            <Link to="/signup" className="inline-flex items-center gap-2">
-              <UserPlus className="h-4 w-4" />
-              Đăng ký
-            </Link>
-          </Button>
-          <Button asChild variant="ghost" className="gap-2">
-            <Link to="/signin" className="inline-flex items-center gap-2">
-              <LogIn className="h-4 w-4" />
-              Đăng nhập
-            </Link>
-          </Button>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="gap-2 px-2 hover:bg-transparent">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.fullName} className="h-8 w-8 rounded-full border border-gray-200 object-cover" />
+                  ) : (
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground border border-primary/20">
+                      {getInitials(user.fullName)}
+                    </span>
+                  )}
+                  <span className="hidden text-[#27272a] font-medium sm:inline-block">{user.fullName}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link to="/#"><User className="mr-2 h-4 w-4" />Hồ sơ</Link>
+                </DropdownMenuItem>
+                <div className="my-1 h-px bg-gray-200" />
+                <DropdownMenuItem onClick={() => void handleLogout()} className="text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Đăng xuất
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Button asChild variant="ghost" className="gap-2">
+                <Link to="/dang-ky" className="inline-flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Đăng ký
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" className="gap-2">
+                <Link to="/dang-nhap" className="inline-flex items-center gap-2">
+                  <LogIn className="h-4 w-4" />
+                  Đăng nhập
+                </Link>
+              </Button>
+            </>
+          )}
           <span className="mx-1 h-6 w-px bg-gray-200" />
           <Button size="icon" variant="ghost"><ShoppingCart className="h-5 w-5 text-primary" /></Button>
         </div>
