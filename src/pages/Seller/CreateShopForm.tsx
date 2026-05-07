@@ -194,7 +194,7 @@ const CreateShopForm = () => {
     );
   }
 
-  const existing = myShops?.[0];
+  const existing = myShops;
   if (existing) {
     return (
       <AuthPageChrome>

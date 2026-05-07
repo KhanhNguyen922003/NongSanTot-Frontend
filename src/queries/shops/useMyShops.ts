@@ -4,8 +4,8 @@ import { apiClient } from '@/core/api/apiClient';
 import { queryKeys } from '@/constants/queryKeys';
 import type { Shop } from './types';
 
-export const fetchMyShops = async (): Promise<Shop[]> => {
-  const { data } = await apiClient.get<Shop[]>('/shops/me');
+export const fetchMyShops = async (): Promise<Shop> => {
+  const { data } = await apiClient.get<Shop>('/shops/me');
   return data;
 };
 

@@ -7,8 +7,15 @@ import { Input } from '@/components/ui/input';
 import { HomeHero } from '@/components/marketplace/home/HomeHero';
 import { HomeSidebar } from '@/components/marketplace/home/HomeSidebar';
 import { marketplaceCategories, marketplaceProducts, marketplaceQuickFilters } from '@/features/marketplace/data';
+import useAuthStore from '@/stores/auth.store';
+import { useMyShopsQuery } from '@/queries/shops/useMyShops';
 
 const Home = () => {
+  const user = useAuthStore((state) => state.user);
+  const isSeller = user?.role === 'seller';
+  const { data: myShops, isLoading: isLoadingMyShops } = useMyShopsQuery(isSeller);
+  const hasSellerShop = !!myShops?.length;
+
   // Ready to migrate to React Hook Form: keep filter state centralized as one object.
   const [filters, setFilters] = useState({
     keyword: '',
@@ -28,10 +35,16 @@ const Home = () => {
   return (
     <main className="container py-4 md:py-6">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[255px_1fr]">
-        <HomeSidebar categories={marketplaceCategories} quickFilters={marketplaceQuickFilters} />
+        <HomeSidebar
+          categories={marketplaceCategories}
+          quickFilters={marketplaceQuickFilters}
+          role={user?.role}
+          isLoadingMyShops={isLoadingMyShops}
+          hasSellerShop={hasSellerShop}
+        />
 
         <section className="space-y-6">
-          <HomeHero imageUrl="https://www.figma.com/api/mcp/asset/0bfdb356-532d-44a6-81a9-b7cb2041963c" />
+          <HomeHero />
 
           <Card className="rounded-lg shadow-card">
             <CardHeader className="border-b pb-3">

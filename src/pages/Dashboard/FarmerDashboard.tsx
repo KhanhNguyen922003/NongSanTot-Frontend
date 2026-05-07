@@ -120,7 +120,7 @@ const FarmerDashboard = () => {
     );
   }
 
-  const shop = myShops?.[0];
+  const shop = myShops;
   if (!shop) {
     return (
       <div className="mx-auto w-full max-w-4xl px-4 py-8">
@@ -250,6 +250,9 @@ const FarmerDashboard = () => {
               </Button>
               <Button variant="outline" asChild>
                 <Link to="/dang-ky-ban-hang">Đi tới màn hình thông tin shop</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/dang-tin-san-pham">Đăng sản phẩm mới</Link>
               </Button>
             </div>
 
