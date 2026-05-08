@@ -18,6 +18,7 @@ import { fetchAuthMe } from '@/queries/Auth/useAuth';
 import useAuthStore from '@/stores/auth.store';
 
 const RECAPTCHA_CONTAINER_ID = 'recaptcha-signin';
+const ADMIN_DASHBOARD_PATH = '/admin';
 
 const SignInForm = () => {
   const navigate = useNavigate();
@@ -83,7 +84,7 @@ const SignInForm = () => {
     });
     useAuthStore.getState().setUser(authMeData.user);
     setOk('Đăng nhập thành công.');
-    navigate(nextPath, { replace: true });
+    navigate(authMeData.user.role === 'admin' ? ADMIN_DASHBOARD_PATH : nextPath, { replace: true });
   };
 
   const onChangePhone = () => {

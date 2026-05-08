@@ -1,4 +1,4 @@
-import { LayoutDashboard, Sparkles, Store } from 'lucide-react';
+import { LayoutDashboard, ShieldCheck, Sparkles, Store } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MarketplaceCategory, MarketplaceFilter } from '@/features/marketplace/data';
@@ -19,9 +19,34 @@ export const HomeSidebar = ({
   hasSellerShop = false,
 }: HomeSidebarProps) => {
   const isSeller = role === 'seller';
+  const isAdmin = role === 'admin';
 
   return (
     <aside className="space-y-4">
+      {isAdmin ? (
+        <Card className="rounded-lg border-primary/20 shadow-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold text-primary">Khu vực admin</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1 pb-3">
+            <Link
+              to="/admin"
+              className="inline-flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-[#27272a] transition hover:bg-muted"
+            >
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              Dashboard admin
+            </Link>
+            <Link
+              to="/admin/san-pham-duyet"
+              className="inline-flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-[#27272a] transition hover:bg-muted"
+            >
+              <LayoutDashboard className="h-4 w-4 text-primary" />
+              Duyệt sản phẩm
+            </Link>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {isSeller ? (
         <Card className="rounded-lg border-primary/20 shadow-card">
           <CardHeader className="pb-2">
@@ -99,7 +124,15 @@ export const HomeSidebar = ({
 
       <Card className="rounded-lg shadow-card">
         <CardContent className="p-0">
-          {isSeller ? (
+          {isAdmin ? (
+            <Link
+              to="/admin"
+              className="flex items-center gap-2 p-4 text-sm font-medium text-primary transition hover:bg-primary/5"
+            >
+              <ShieldCheck className="h-4 w-4 shrink-0" />
+              Đi đến Admin Dashboard
+            </Link>
+          ) : isSeller ? (
             <Link
               to={hasSellerShop ? '/thong-ke-cua-hang' : '/dang-ky-ban-hang'}
               className="flex items-center gap-2 p-4 text-sm font-medium text-primary transition hover:bg-primary/5"

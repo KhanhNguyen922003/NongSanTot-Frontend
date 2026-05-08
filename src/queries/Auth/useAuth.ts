@@ -28,9 +28,11 @@ export const handleAuthInvalidate = () =>
     if (firebaseUser) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.authMe });
       void queryClient.invalidateQueries({ queryKey: queryKeys.myShops });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.cart.me });
       return;
     }
 
     queryClient.removeQueries({ queryKey: queryKeys.authMe });
     queryClient.removeQueries({ queryKey: queryKeys.myShops });
+    queryClient.removeQueries({ queryKey: queryKeys.cart.me });
   });

@@ -1,12 +1,12 @@
 /** Cửa hàng trả về từ API (map với bảng `shops` ở backend). */
 export type Shop = {
-  id: number;
-  ownerId: number;
+  id: string;
+  ownerId: string;
   name: string;
   description: string | null;
   logo: string | null;
   displayAddress: string | null;
-  defaultPickAddressId: number | null;
+  defaultPickAddressId: string | null;
   rating: number | null;
   isActive: boolean | null;
   createdAt: string | null;
@@ -21,7 +21,6 @@ export type CreateShopBody = {
   receiverName?: string;
   receiverPhone?: string;
   province?: string;
-  district?: string;
   ward?: string;
   detail?: string;
 };

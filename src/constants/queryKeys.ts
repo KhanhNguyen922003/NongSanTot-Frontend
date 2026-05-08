@@ -1,6 +1,21 @@
 export const queryKeys = {
   authMe: ['auth', 'me'] as const,
   myShops: ['shops', 'me'] as const,
+  admin: {
+    dashboard: ['admin', 'dashboard'] as const,
+    products: (status: string) => ['admin', 'products', status] as const,
+    product: (id: string) => ['admin', 'products', id] as const,
+  },
+  products: {
+    all: ['products'] as const,
+    detail: (id: string) => ['products', id] as const,
+  },
+  cart: {
+    me: ['carts', 'me'] as const,
+  },
+  addresses: {
+    byUser: (userId: string) => ['addresses', 'user', userId] as const,
+  },
   vietnamProvinceApi: {
     all: ['vietnam-province-api'] as const,
     provinces: ['vietnam-province-api', 'provinces'] as const,

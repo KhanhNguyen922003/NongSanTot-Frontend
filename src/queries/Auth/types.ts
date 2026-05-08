@@ -1,6 +1,6 @@
 export type AuthMeResponse = {
     user: {
-      id: number;
+      id: string;
       firebaseUid?: string | null;
       phone: string;
       fullName: string;

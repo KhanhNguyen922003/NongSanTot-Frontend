@@ -2,10 +2,12 @@ import { Bell, CircleHelp, Globe, LogIn, Search, ShoppingCart, UserPlus, LogOut,
 import { Link, useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../../firebase.config';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useMyCartQuery } from '@/queries/carts/useCarts';
 import useAuthStore from '@/stores/auth.store';
 
 const getInitials = (name?: string) => {
@@ -20,6 +22,8 @@ const getInitials = (name?: string) => {
 export function MarketplaceNavbar() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { data: cartData } = useMyCartQuery(!!user);
+  const cartCount = cartData?.items.length ?? 0;
 
   const handleLogout = async () => {
     try {
@@ -128,7 +132,54 @@ export function MarketplaceNavbar() {
             </>
           )}
           <span className="mx-1 h-6 w-px bg-gray-200" />
-          <Button size="icon" variant="ghost"><ShoppingCart className="h-5 w-5 text-primary" /></Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="icon" variant="ghost" className="relative">
+                <ShoppingCart className="h-5 w-5 text-primary" />
+                {cartCount > 0 ? (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-white">
+                    {cartCount}
+                  </span>
+                ) : null}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-96 p-0">
+              <div className="p-4">
+                <p className="mb-3 text-sm font-semibold text-[#27272a]">Giỏ hàng của bạn</p>
+                {cartCount === 0 ? (
+                  <p className="text-sm text-muted-foreground">Giỏ hàng trống.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {cartData?.items.slice(0, 5).map((item) => (
+                      <div key={item.id} className="flex items-center gap-2 rounded-md border p-2">
+                        {item.productCoverImage || item.productImages?.[0] ? (
+                          <img
+                            src={item.productCoverImage || item.productImages?.[0]}
+                            alt={item.productName || 'product'}
+                            className="h-11 w-11 rounded object-cover"
+                          />
+                        ) : (
+                          <div className="h-11 w-11 rounded bg-slate-100" />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-[#27272a]">{item.productName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.quantity} x {(item.productPrice ?? 0).toLocaleString('vi-VN')}đ
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                    {cartCount > 5 ? (
+                      <Badge variant="outline">và {cartCount - 5} sản phẩm khác</Badge>
+                    ) : null}
+                  </div>
+                )}
+                <Button asChild className="mt-4 w-full">
+                  <Link to="/gio-hang">Xem giỏ hàng</Link>
+                </Button>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

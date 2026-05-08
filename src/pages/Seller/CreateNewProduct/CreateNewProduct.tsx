@@ -16,6 +16,8 @@ import { FormSelect } from "@/components/form/FormSelect";
 import { FormTextarea } from "@/components/form/FormTextarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getApiErrorMessage } from "@/core/api/getApiErrorMessage";
+import { useCreateProductMutation } from "@/queries/products/useCreateProduct";
 import { useMyShopsQuery } from "@/queries/shops/useMyShops";
 import { categoryOptions, ProductFormValues, productSchema, shippingOptions, unitOptions } from "./helper";
 
@@ -26,9 +28,10 @@ const STEP_LABELS = ["Thông tin cơ bản", "Media sản phẩm", "Giai đoạn
 const CreateNewProduct = () => {
   const navigate = useNavigate();
   const [firebaseUser, setFirebaseUser] = useState<User | null | "pending">("pending");
-  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [submitMessage, setSubmitMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [selectedShippingServiceId, setSelectedShippingServiceId] = useState<string>("");
   const [currentStep, setCurrentStep] = useState(0);
+  const createProduct = useCreateProductMutation();
 
   const canQueryShops = typeof firebaseUser === "object" && firebaseUser !== null;
   const { data: myShops, isLoading: myShopsLoading, isError: myShopsError } = useMyShopsQuery(canQueryShops);
@@ -96,13 +99,11 @@ const CreateNewProduct = () => {
 
   const onSubmit = form.handleSubmit(async (values) => {
     if (!selectedShop) {
-      setSubmitMessage("Bạn cần có cửa hàng trước khi đăng sản phẩm.");
+      setSubmitMessage({ type: "error", text: "Bạn cần có cửa hàng trước khi đăng sản phẩm." });
       return;
     }
 
     const payload = {
-      shopId: selectedShop.id,
-      categoryId: Number(values.categoryId),
       name: values.name.trim(),
       description: values.description.trim(),
       origin: values.origin.trim(),
@@ -112,12 +113,12 @@ const CreateNewProduct = () => {
       images: values.mediaFiles.filter((item) => item.type === "image").map((item) => item.url),
       videos: values.mediaFiles.filter((item) => item.type === "video").map((item) => item.url),
       shippingMethods: values.shippingMethods,
-      preferredShippingServiceId: values.preferredShippingServiceId ? Number(values.preferredShippingServiceId) : null,
       pickupAddress: {
         displayAddress: values.pickupAddressDisplay,
         receiverName: values.pickupReceiverName,
         receiverPhone: values.pickupReceiverPhone,
       },
+      preferredShippingServiceId: values.preferredShippingServiceId ? Number(values.preferredShippingServiceId) : undefined,
       isAvailable: true,
       growthDiary: values.growthDiary.map((item) => ({
         stageName: item.stageName.trim(),
@@ -127,8 +128,13 @@ const CreateNewProduct = () => {
       })),
     };
 
-    console.log("create-product payload", payload);
-    setSubmitMessage("Đã validate form thành công. Payload đã sẵn sàng để nối API tạo sản phẩm.");
+    try {
+      await createProduct.mutateAsync(payload);
+      setSubmitMessage({ type: "success", text: "Đã tạo sản phẩm thành công. Sản phẩm đang chờ kiểm duyệt." });
+      navigate(DASHBOARD_PATH);
+    } catch (error) {
+      setSubmitMessage({ type: "error", text: getApiErrorMessage(error, "Không thể tạo sản phẩm.") });
+    }
   });
 
   if (firebaseUser === "pending" || myShopsLoading) {
@@ -206,7 +212,7 @@ const CreateNewProduct = () => {
         </CardHeader>
         <CardContent>
           <form className="space-y-6" onSubmit={onSubmit} noValidate>
-            {submitMessage ? <AuthFormMessage type="success" text={submitMessage} /> : null}
+            {submitMessage ? <AuthFormMessage type={submitMessage.type} text={submitMessage.text} /> : null}
 
             {currentStep === 0 ? (
               <>
@@ -475,8 +481,8 @@ const CreateNewProduct = () => {
                 Tiếp tục
               </Button>
             ) : (
-              <Button type="button" onClick={() => void onSubmit()} disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Đang chuẩn bị..." : "Lưu bản nháp"}
+              <Button type="button" onClick={() => void onSubmit()} disabled={form.formState.isSubmitting || createProduct.isPending}>
+                {form.formState.isSubmitting || createProduct.isPending ? "Đang tạo..." : "Đăng sản phẩm"}
               </Button>
             )}
           </div>
