@@ -16,6 +16,7 @@ export const useDeactivateMyShopMutation = () => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.myShops });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.shopDashboard });
       void queryClient.invalidateQueries({ queryKey: queryKeys.authMe });
     },
   });

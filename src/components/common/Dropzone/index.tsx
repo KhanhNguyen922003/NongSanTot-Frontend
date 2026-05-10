@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import axios from "axios";
 import { ImagePlus, Loader2, Trash2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 export type UploadedFile = {
   url: string;

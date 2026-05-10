@@ -1,10 +1,5 @@
 import { Product } from '@/shared/types';
 
-export type MarketplaceCategory = {
-  id: string;
-  label: string;
-};
-
 export type MarketplaceFilter = {
   id: string;
   label: string;
@@ -17,17 +12,6 @@ export type MarketplaceProduct = Product & {
   rating: number;
   reviewCount: number;
 };
-
-export const marketplaceCategories: MarketplaceCategory[] = [
-  { id: 'rau-cu', label: 'Rau củ quả và nấm' },
-  { id: 'trai-cay', label: 'Trái cây tươi' },
-  { id: 'thit', label: 'Thịt' },
-  { id: 'hai-san', label: 'Hải sản' },
-  { id: 'dong-lanh', label: 'Thực phẩm đông lạnh' },
-  { id: 'gia-vi', label: 'Mắm, gia vị và thảo mộc' },
-  { id: 'trung-sua', label: 'Trứng, bơ, sữa và phô mai' },
-  { id: 'do-kho', label: 'Đồ khô' },
-];
 
 export const marketplaceQuickFilters: MarketplaceFilter[] = [
   { id: 'new', label: 'Sản phẩm mới' },

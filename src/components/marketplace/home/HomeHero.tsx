@@ -1,7 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import heroSlide1 from '@/assets/homepage/heroSlide.png';
-import heroSlide2 from '@/assets/homepage/heroSlide2.jpg';
 import grid1 from '@/assets/homepage/Grid1_1.png';
 import grid2 from '@/assets/homepage/Grid2_3.png';
 import grid3 from '@/assets/homepage/Grid3.png';

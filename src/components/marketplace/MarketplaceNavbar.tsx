@@ -1,5 +1,6 @@
 import { Bell, CircleHelp, Globe, LogIn, Search, ShoppingCart, UserPlus, LogOut, User } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../../firebase.config';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMyCartQuery } from '@/queries/carts/useCarts';
+import { useCategoriesQuery } from '@/queries/categories/useCategories';
+import { useProductsQuery } from '@/queries/products/useProducts';
+import { sellerHubPaths } from '@/constants/sellerHub';
 import useAuthStore from '@/stores/auth.store';
 
 const getInitials = (name?: string) => {
@@ -21,9 +25,66 @@ const getInitials = (name?: string) => {
 
 export function MarketplaceNavbar() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, logout } = useAuthStore();
   const { data: cartData } = useMyCartQuery(!!user);
   const cartCount = cartData?.items.length ?? 0;
+  const isMarketplacePage = location.pathname === '/';
+  const initialKeyword = useMemo(
+    () => (isMarketplacePage ? searchParams.get('q') || '' : ''),
+    [isMarketplacePage, searchParams],
+  );
+  const [keyword, setKeyword] = useState(initialKeyword);
+  const [debouncedKeyword, setDebouncedKeyword] = useState(initialKeyword);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchBoxRef = useRef<HTMLDivElement | null>(null);
+
+  const canRecommend = debouncedKeyword.trim().length >= 2;
+  const { data: recommendProducts = [], isLoading: isLoadingRecommend } = useProductsQuery(
+    {
+      q: debouncedKeyword.trim() || undefined,
+    },
+    canRecommend,
+  );
+  const { data: categories = [] } = useCategoriesQuery();
+
+  const recommendedCategories = useMemo(() => {
+    const normalized = debouncedKeyword.trim().toLowerCase();
+    if (normalized.length < 2) return [];
+    return categories
+      .filter((item) => item.name.toLowerCase().includes(normalized))
+      .slice(0, 4);
+  }, [categories, debouncedKeyword]);
+
+  const recommendedProducts = useMemo(
+    () => recommendProducts.slice(0, 6),
+    [recommendProducts],
+  );
+
+  useEffect(() => {
+    setKeyword(initialKeyword);
+  }, [initialKeyword]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedKeyword(keyword);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [keyword]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!searchBoxRef.current) return;
+      if (searchBoxRef.current.contains(event.target as Node)) return;
+      setIsSearchFocused(false);
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -35,8 +96,39 @@ export function MarketplaceNavbar() {
     }
   };
 
+  const handleSubmitSearch = (event: FormEvent) => {
+    event.preventDefault();
+    const next = new URLSearchParams(isMarketplacePage ? searchParams : undefined);
+    if (keyword.trim()) {
+      next.set('q', keyword.trim());
+    } else {
+      next.delete('q');
+    }
+    next.delete('page');
+
+    if (isMarketplacePage) {
+      setSearchParams(next);
+      setIsSearchFocused(false);
+      return;
+    }
+
+    navigate({
+      pathname: '/',
+      search: next.toString(),
+    });
+    setIsSearchFocused(false);
+  };
+
+  const handleSelectRecommendation = (nextSearchParams: URLSearchParams) => {
+    navigate({
+      pathname: '/',
+      search: nextSearchParams.toString(),
+    });
+    setIsSearchFocused(false);
+  };
+
   return (
-    <header className="border-b bg-white">
+    <header className="sticky top-0 z-40 border-b bg-white">
       <div className="border-b bg-[#f7f7f7] text-xs">
         <div className="container flex h-9 items-center justify-between">
           <div className="flex items-center gap-3 text-[#27272a]">
@@ -72,7 +164,11 @@ export function MarketplaceNavbar() {
           <p className="text-xs text-secondary">Nông sản online</p>
         </Link>
 
-        <div className="flex h-12 flex-1 items-center rounded-xl border bg-white px-2">
+        <div ref={searchBoxRef} className="relative flex-1">
+          <form
+            onSubmit={handleSubmitSearch}
+            className="flex h-12 items-center rounded-xl border bg-white px-2"
+          >
           <Select defaultValue="goods">
             <SelectTrigger className="w-[150px] border-0 shadow-none focus:ring-0">
               <SelectValue />
@@ -83,10 +179,69 @@ export function MarketplaceNavbar() {
             </SelectContent>
           </Select>
           <span className="mx-2 h-6 w-px bg-gray-200" />
-          <Input className="border-0 shadow-none focus-visible:ring-0" placeholder="Tìm kiếm sản phẩm" />
-          <Button size="icon" variant="secondary" className="h-9 w-10 rounded-md">
+          <Input
+            className="border-0 shadow-none focus-visible:ring-0"
+            placeholder="Tìm kiếm sản phẩm"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+          />
+          <Button type="submit" size="icon" variant="secondary" className="h-9 w-10 rounded-md">
             <Search className="h-4 w-4" />
           </Button>
+          </form>
+
+          {isSearchFocused && keyword.trim().length >= 2 ? (
+            <div className="absolute left-0 right-0 top-[52px] z-40 rounded-lg border bg-white p-2 shadow-lg">
+              <p className="px-2 pb-1 text-xs font-medium text-muted-foreground">
+                Gợi ý tìm kiếm
+              </p>
+              {isLoadingRecommend ? (
+                <p className="px-2 py-3 text-sm text-muted-foreground">Đang tìm gợi ý...</p>
+              ) : (
+                <div className="space-y-1">
+                  {recommendedCategories.map((category) => (
+                    <button
+                      key={category.id}
+                      type="button"
+                      className="flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm hover:bg-slate-50"
+                      onClick={() => {
+                        const next = new URLSearchParams();
+                        next.set('categorySlug', category.slug);
+                        next.set('q', keyword.trim());
+                        handleSelectRecommendation(next);
+                      }}
+                    >
+                      <span>Danh mục: {category.name}</span>
+                      <span className="text-xs text-muted-foreground">/{category.slug}</span>
+                    </button>
+                  ))}
+                  {recommendedProducts.map((product) => (
+                    <button
+                      key={product.id}
+                      type="button"
+                      className="flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm hover:bg-slate-50"
+                      onClick={() => {
+                        const next = new URLSearchParams();
+                        next.set('q', product.name);
+                        handleSelectRecommendation(next);
+                      }}
+                    >
+                      <span className="truncate pr-2">{product.name}</span>
+                      <span className="text-xs text-primary">
+                        {product.price.toLocaleString('vi-VN')}đ
+                      </span>
+                    </button>
+                  ))}
+                  {!recommendedCategories.length && !recommendedProducts.length ? (
+                    <p className="px-2 py-3 text-sm text-muted-foreground">
+                      Chưa có gợi ý phù hợp.
+                    </p>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
 
         <div className="flex items-center gap-2 text-sm">
@@ -107,6 +262,12 @@ export function MarketplaceNavbar() {
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem asChild>
                   <Link to="/#"><User className="mr-2 h-4 w-4" />Hồ sơ</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/don-mua">Đơn mua</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to={sellerHubPaths.sellOrders}>Đơn bán</Link>
                 </DropdownMenuItem>
                 <div className="my-1 h-px bg-gray-200" />
                 <DropdownMenuItem onClick={() => void handleLogout()} className="text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">

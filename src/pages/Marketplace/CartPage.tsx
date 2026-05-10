@@ -191,7 +191,9 @@ const CartPage = () => {
                 <Button asChild variant="outline">
                   <Link to="/">Tiếp tục mua hàng</Link>
                 </Button>
-                <Button disabled>Tiến hành đặt hàng</Button>
+                <Button asChild>
+                  <Link to="/dat-hang">Tiến hành đặt hàng</Link>
+                </Button>
               </div>
             </>
           )}

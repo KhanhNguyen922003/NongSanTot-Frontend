@@ -1,17 +1,30 @@
 export const queryKeys = {
   authMe: ['auth', 'me'] as const,
   myShops: ['shops', 'me'] as const,
+  shopDashboard: ['shops', 'me', 'dashboard'] as const,
+  categories: {
+    all: ['categories'] as const,
+    detail: (id: string) => ['categories', id] as const,
+  },
   admin: {
     dashboard: ['admin', 'dashboard'] as const,
     products: (status: string) => ['admin', 'products', status] as const,
     product: (id: string) => ['admin', 'products', id] as const,
   },
   products: {
-    all: ['products'] as const,
+    all: (filtersKey: string) => ['products', 'list', filtersKey] as const,
     detail: (id: string) => ['products', id] as const,
+    sellerList: ['products', 'me', 'list'] as const,
   },
   cart: {
     me: ['carts', 'me'] as const,
+  },
+  orders: {
+    shippingQuote: (addressId: string, fastShipping: boolean) =>
+      ['orders', 'checkout', 'quote', addressId, fastShipping] as const,
+    myBuy: ['orders', 'me', 'buy'] as const,
+    mySell: ['orders', 'me', 'sell'] as const,
+    detail: (id: string) => ['orders', id] as const,
   },
   addresses: {
     byUser: (userId: string) => ['addresses', 'user', userId] as const,

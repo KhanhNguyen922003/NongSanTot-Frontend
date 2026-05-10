@@ -16,13 +16,13 @@ import { FormSelect } from "@/components/form/FormSelect";
 import { FormTextarea } from "@/components/form/FormTextarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { sellerHubPaths } from "@/constants/sellerHub";
 import { getApiErrorMessage } from "@/core/api/getApiErrorMessage";
 import { useCreateProductMutation } from "@/queries/products/useCreateProduct";
 import { useMyShopsQuery } from "@/queries/shops/useMyShops";
 import { categoryOptions, ProductFormValues, productSchema, shippingOptions, unitOptions } from "./helper";
 
 const SIGNIN_PATH = "/dang-nhap";
-const DASHBOARD_PATH = "/thong-ke-cua-hang";
 const STEP_LABELS = ["Thông tin cơ bản", "Media sản phẩm", "Giai đoạn phát triển", "Vận chuyển & xem trước"] as const;
 
 const CreateNewProduct = () => {
@@ -131,7 +131,7 @@ const CreateNewProduct = () => {
     try {
       await createProduct.mutateAsync(payload);
       setSubmitMessage({ type: "success", text: "Đã tạo sản phẩm thành công. Sản phẩm đang chờ kiểm duyệt." });
-      navigate(DASHBOARD_PATH);
+      navigate(sellerHubPaths.overview);
     } catch (error) {
       setSubmitMessage({ type: "error", text: getApiErrorMessage(error, "Không thể tạo sản phẩm.") });
     }
@@ -469,7 +469,7 @@ const CreateNewProduct = () => {
 
       <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-white/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3">
-          <Button type="button" variant="outline" onClick={() => void navigate(DASHBOARD_PATH)}>
+          <Button type="button" variant="outline" onClick={() => void navigate(sellerHubPaths.overview)}>
             Quay về dashboard
           </Button>
           <div className="flex items-center gap-3">

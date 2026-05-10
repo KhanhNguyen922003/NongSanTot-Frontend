@@ -1,50 +1,87 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2, ShieldCheck, Sparkles } from 'lucide-react';
 import { ProductCard } from '@/components/marketplace/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { HomeHero } from '@/components/marketplace/home/HomeHero';
 import { HomeSidebar } from '@/components/marketplace/home/HomeSidebar';
-import { marketplaceCategories, marketplaceQuickFilters } from '@/features/marketplace/data';
+import { marketplaceQuickFilters } from '@/features/marketplace/data';
 import useAuthStore from '@/stores/auth.store';
 import { useMyShopsQuery } from '@/queries/shops/useMyShops';
 import { useProductsQuery } from '@/queries/products/useProducts';
 import { getApiErrorMessage } from '@/core/api/getApiErrorMessage';
+import { useSearchParams } from 'react-router-dom';
 
 const Home = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const user = useAuthStore((state) => state.user);
   const isSeller = user?.role === 'seller';
   const isAdmin = user?.role === 'admin';
   const { data: myShops, isLoading: isLoadingMyShops } = useMyShopsQuery(isSeller);
-  const { data: products = [], isLoading: isLoadingProducts, isError: isProductsError, error: productsError } = useProductsQuery();
-  const hasSellerShop = !!myShops;
+  const keyword = searchParams.get('q') || '';
+  const categorySlug = searchParams.get('categorySlug') || '';
+  const selectedTag = searchParams.get('tag') || '';
+  const minRating = searchParams.get('minRating');
+  const minPrice = searchParams.get('minPrice');
+  const maxPrice = searchParams.get('maxPrice');
 
-  // Ready to migrate to React Hook Form: keep filter state centralized as one object.
-  const [filters, setFilters] = useState({
-    keyword: '',
+  const numericMinRating = minRating ? Number(minRating) : undefined;
+  const numericMinPrice = minPrice ? Number(minPrice) : undefined;
+  const numericMaxPrice = maxPrice ? Number(maxPrice) : undefined;
+
+  const { data: products = [], isLoading: isLoadingProducts, isError: isProductsError, error: productsError } = useProductsQuery({
+    q: keyword || undefined,
+    categorySlug: categorySlug ? [categorySlug] : undefined,
+    tags: selectedTag ? [selectedTag] : undefined,
+    minRating: numericMinRating,
+    minPrice: numericMinPrice,
+    maxPrice: numericMaxPrice,
   });
+  const hasSellerShop = !!myShops;
+  const filteredProducts = useMemo(() => products, [products]);
 
-  const filteredProducts = useMemo(() => {
-    if (!filters.keyword.trim()) {
-      return products;
+  const updateParam = (key: string, value?: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (value && value.trim()) {
+      next.set(key, value.trim());
+    } else {
+      next.delete(key);
     }
+    setSearchParams(next);
+  };
 
-    return products.filter((item) =>
-      item.name.toLowerCase().includes(filters.keyword.trim().toLowerCase()),
-    );
-  }, [filters.keyword, products]);
+  const clearFilters = () => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('categorySlug');
+      next.delete('tag');
+      next.delete('minRating');
+      next.delete('minPrice');
+      next.delete('maxPrice');
+      return next;
+    });
+  };
 
   return (
     <main className="container py-4 md:py-6">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[255px_1fr]">
         <HomeSidebar
-          categories={marketplaceCategories}
           quickFilters={marketplaceQuickFilters}
           role={user?.role}
           isLoadingMyShops={isLoadingMyShops}
           hasSellerShop={hasSellerShop}
+            minRating={minRating ?? ''}
+            minPrice={minPrice ?? ''}
+            maxPrice={maxPrice ?? ''}
+            onMinRatingChange={(value) => updateParam('minRating', value || undefined)}
+            onMinPriceChange={(value) => updateParam('minPrice', value)}
+            onMaxPriceChange={(value) => updateParam('maxPrice', value)}
+            onClearFilters={clearFilters}
+            selectedCategorySlug={categorySlug || undefined}
+            onCategorySelect={(slug) => updateParam('categorySlug', slug)}
+            selectedTag={selectedTag || undefined}
+            onTagSelect={(tag) => updateParam('tag', tag)}
         />
 
         <section className="space-y-6">
@@ -76,19 +113,8 @@ const Home = () => {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <CardTitle className="inline-flex items-center gap-2 text-[20px] font-medium text-primary">
                   <Sparkles className="h-5 w-5" />
-                  Sản phẩm mới
+                  Sản phẩm
                 </CardTitle>
-                <Input
-                  value={filters.keyword}
-                  onChange={(event) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      keyword: event.target.value,
-                    }))
-                  }
-                  placeholder="Lọc nhanh theo tên sản phẩm..."
-                  className="h-9 w-full md:w-[280px]"
-                />
               </div>
             </CardHeader>
             <CardContent className="pt-4">
@@ -103,7 +129,7 @@ const Home = () => {
                 </div>
               ) : filteredProducts.length === 0 ? (
                 <div className="rounded-md border bg-slate-50 p-6 text-center text-sm text-muted-foreground">
-                  {filters.keyword.trim()
+                  {keyword.trim() || categorySlug || selectedTag || minRating || minPrice || maxPrice
                     ? 'Không tìm thấy sản phẩm phù hợp.'
                     : 'Chưa có sản phẩm nào được admin duyệt để hiển thị.'}
                 </div>
