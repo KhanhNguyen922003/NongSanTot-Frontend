@@ -39,21 +39,21 @@ const SellOrdersPage = () => {
           ) : (
             <div className="space-y-3">
               {data.map((order) => (
-                <div key={order.id} className="flex items-center justify-between rounded-md border p-3">
-                  <div>
+                <div key={order.id} className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
                     <p className="font-medium text-[#27272a]">Đơn #{order.id.slice(0, 8)}</p>
                     <p className="text-sm text-muted-foreground">
                       {order.finalPrice.toLocaleString('vi-VN')}đ · {order.status}
                     </p>
                   </div>
                   {order.status === 'pending' ? (
-                    <Button asChild size="sm">
+                    <Button asChild size="sm" className="w-full shrink-0 sm:w-auto">
                       <Link to={`/quan-ly-don/don-mua/xac-nhan-don-hang/${order.id}`}>
                         Xác nhận đơn
                       </Link>
                     </Button>
                   ) : (
-                    <Button asChild variant="outline" size="sm">
+                    <Button asChild variant="outline" size="sm" className="w-full shrink-0 sm:w-auto">
                       <Link to={`/don-hang/${order.id}`}>Xem chi tiết</Link>
                     </Button>
                   )}

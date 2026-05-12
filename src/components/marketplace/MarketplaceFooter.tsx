@@ -3,9 +3,9 @@ const aboutLinks = ['Giới thiệu', 'Tuyển dụng', 'Chính sách bảo mậ
 
 export function MarketplaceFooter() {
   return (
-    <footer className="mt-12 border-t bg-white">
-      <div className="container py-10">
-        <div className="grid grid-cols-1 gap-8 border-b pb-6 md:grid-cols-4">
+    <footer className="mt-8 border-t bg-white pb-[max(1rem,env(safe-area-inset-bottom))] md:mt-12">
+      <div className="container py-6 md:py-10">
+        <div className="grid grid-cols-1 gap-6 border-b pb-6 sm:grid-cols-2 md:grid-cols-4 md:gap-8">
           <div>
             <h4 className="mb-3 text-sm font-semibold uppercase">Dịch vụ khách hàng</h4>
             <ul className="space-y-2 text-sm text-[#27272a]">
@@ -22,7 +22,7 @@ export function MarketplaceFooter() {
               ))}
             </ul>
           </div>
-          <div>
+          <div className="hidden md:block">
             <h4 className="mb-3 text-sm font-semibold uppercase">Thanh toán</h4>
             <div className="grid grid-cols-5 gap-2">
               {Array.from({ length: 10 }).map((_, idx) => (
@@ -30,7 +30,7 @@ export function MarketplaceFooter() {
               ))}
             </div>
           </div>
-          <div>
+          <div className="hidden md:block">
             <h4 className="mb-3 text-sm font-semibold uppercase">Tải ứng dụng</h4>
             <div className="flex gap-3">
               <div className="h-20 w-20 rounded border bg-gray-100" />

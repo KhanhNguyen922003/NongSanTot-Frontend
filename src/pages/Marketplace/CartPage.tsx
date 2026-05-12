@@ -78,7 +78,7 @@ const CartPage = () => {
   }
 
   return (
-    <main className="container space-y-6 py-6">
+    <main className="container space-y-4 px-3 py-4 sm:space-y-6 sm:px-4 sm:py-6">
       <Card className="rounded-lg shadow-card">
         <CardHeader>
           <CardTitle className="text-xl text-[#27272a]">Giỏ hàng của bạn</CardTitle>
@@ -122,7 +122,7 @@ const CartPage = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
                           <div className="inline-flex items-center rounded-md border">
                             <Button
                               type="button"
@@ -157,7 +157,7 @@ const CartPage = () => {
                             </Button>
                           </div>
 
-                          <p className="w-28 text-right font-semibold text-primary">
+                          <p className="min-w-[5.5rem] flex-1 text-right font-semibold text-primary sm:w-28 sm:flex-none">
                             {((item.productPrice ?? 0) * item.quantity).toLocaleString('vi-VN')}đ
                           </p>
 
@@ -187,11 +187,11 @@ const CartPage = () => {
                 </p>
               </div>
 
-              <div className="flex justify-end gap-3">
-                <Button asChild variant="outline">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+                <Button asChild variant="outline" className="w-full sm:w-auto">
                   <Link to="/">Tiếp tục mua hàng</Link>
                 </Button>
-                <Button asChild>
+                <Button asChild className="w-full sm:w-auto">
                   <Link to="/dat-hang">Tiến hành đặt hàng</Link>
                 </Button>
               </div>

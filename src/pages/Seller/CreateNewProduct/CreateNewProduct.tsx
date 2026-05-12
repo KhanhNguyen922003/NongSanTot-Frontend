@@ -257,7 +257,7 @@ const CreateNewProduct = () => {
   const progress = ((currentStep + 1) / STEP_LABELS.length) * 100;
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8 pb-28">
+    <div className="mx-auto w-full max-w-5xl px-3 py-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:pb-28">
       <Card className="rounded-lg border bg-white shadow-card">
         <CardHeader className="space-y-3">
           <CardTitle className="text-2xl text-[#27272a]">Đăng sản phẩm mới</CardTitle>
@@ -562,21 +562,21 @@ const CreateNewProduct = () => {
         </CardContent>
       </Card>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-white/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3">
-          <Button type="button" variant="outline" onClick={() => void navigate(sellerHubPaths.overview)}>
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-2 px-3 py-2.5 sm:flex-nowrap sm:gap-3 sm:px-4 sm:py-3">
+          <Button type="button" variant="outline" size="sm" className="shrink-0 text-xs sm:text-sm" onClick={() => void navigate(sellerHubPaths.overview)}>
             Về trang quản lý
           </Button>
-          <div className="flex items-center gap-3">
-            <Button type="button" variant="outline" onClick={moveBack} disabled={currentStep === 0}>
+          <div className="flex flex-1 items-center justify-end gap-2 sm:flex-initial sm:gap-3">
+            <Button type="button" variant="outline" size="sm" className="text-xs sm:text-sm" onClick={moveBack} disabled={currentStep === 0}>
               Quay lại
             </Button>
             {currentStep < STEP_LABELS.length - 1 ? (
-              <Button type="button" onClick={() => void moveNext()}>
+              <Button type="button" size="sm" className="text-xs sm:text-sm" onClick={() => void moveNext()}>
                 Tiếp tục
               </Button>
             ) : (
-              <Button type="button" onClick={() => void onSubmit()} disabled={form.formState.isSubmitting || createProduct.isPending}>
+              <Button type="button" size="sm" className="text-xs sm:text-sm" onClick={() => void onSubmit()} disabled={form.formState.isSubmitting || createProduct.isPending}>
                 {form.formState.isSubmitting || createProduct.isPending ? "Đang tạo..." : "Đăng sản phẩm"}
               </Button>
             )}

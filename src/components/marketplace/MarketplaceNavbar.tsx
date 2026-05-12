@@ -164,8 +164,8 @@ export function MarketplaceNavbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-white">
-      <div className="border-b bg-[#f7f7f7] text-xs">
+    <header className="sticky top-0 z-40 border-b bg-white pt-[env(safe-area-inset-top)]">
+      <div className="hidden border-b bg-[#f7f7f7] text-xs md:block">
         <div className="container flex h-9 items-center justify-between">
           <div className="flex items-center gap-3 text-[#27272a]">
             <span>Kênh người bán</span>
@@ -194,93 +194,15 @@ export function MarketplaceNavbar() {
         </div>
       </div>
 
-      <div className="container flex h-20 items-center justify-between gap-6">
-        <Link to="/" className="min-w-[160px]">
-          <p className="text-2xl font-bold leading-none text-primary">Nông Sản <span className="text-secondary">Tốt</span></p>
-          <p className="text-xs text-secondary">Nông sản online</p>
+      <div className="container flex flex-wrap items-center gap-x-4 gap-y-3 py-3 md:h-20 md:flex-nowrap md:items-center md:gap-6 md:py-0">
+        <Link to="/" className="order-1 min-w-0 shrink-0 md:min-w-[140px]">
+          <p className="text-xl font-bold leading-none text-primary md:text-2xl">
+            Nông Sản <span className="text-secondary">Tốt</span>
+          </p>
+          <p className="text-[10px] text-secondary md:text-xs">Nông sản online</p>
         </Link>
 
-        <div ref={searchBoxRef} className="relative flex-1">
-          <form
-            onSubmit={handleSubmitSearch}
-            className="flex h-12 items-center rounded-xl border bg-white px-2"
-          >
-          <Select defaultValue="goods">
-            <SelectTrigger className="w-[150px] border-0 shadow-none focus:ring-0">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="goods">Hàng hóa</SelectItem>
-              <SelectItem value="shops">Cửa hàng</SelectItem>
-            </SelectContent>
-          </Select>
-          <span className="mx-2 h-6 w-px bg-gray-200" />
-          <Input
-            className="border-0 shadow-none focus-visible:ring-0"
-            placeholder="Tìm kiếm sản phẩm"
-            value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
-            onFocus={() => setIsSearchFocused(true)}
-          />
-          <Button type="submit" size="icon" variant="secondary" className="h-9 w-10 rounded-md">
-            <Search className="h-4 w-4" />
-          </Button>
-          </form>
-
-          {isSearchFocused && keyword.trim().length >= 2 ? (
-            <div className="absolute left-0 right-0 top-[52px] z-40 rounded-lg border bg-white p-2 shadow-lg">
-              <p className="px-2 pb-1 text-xs font-medium text-muted-foreground">
-                Gợi ý tìm kiếm
-              </p>
-              {isLoadingRecommend ? (
-                <p className="px-2 py-3 text-sm text-muted-foreground">Đang tìm gợi ý...</p>
-              ) : (
-                <div className="space-y-1">
-                  {recommendedCategories.map((category) => (
-                    <button
-                      key={category.id}
-                      type="button"
-                      className="flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm hover:bg-slate-50"
-                      onClick={() => {
-                        const next = new URLSearchParams();
-                        next.set('categorySlug', category.slug);
-                        next.set('q', keyword.trim());
-                        handleSelectRecommendation(next);
-                      }}
-                    >
-                      <span>Danh mục: {category.name}</span>
-                      <span className="text-xs text-muted-foreground">/{category.slug}</span>
-                    </button>
-                  ))}
-                  {recommendedProducts.map((product) => (
-                    <button
-                      key={product.id}
-                      type="button"
-                      className="flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm hover:bg-slate-50"
-                      onClick={() => {
-                        const next = new URLSearchParams();
-                        next.set('q', product.name);
-                        handleSelectRecommendation(next);
-                      }}
-                    >
-                      <span className="truncate pr-2">{product.name}</span>
-                      <span className="text-xs text-primary">
-                        {product.price.toLocaleString('vi-VN')}đ
-                      </span>
-                    </button>
-                  ))}
-                  {!recommendedCategories.length && !recommendedProducts.length ? (
-                    <p className="px-2 py-3 text-sm text-muted-foreground">
-                      Chưa có gợi ý phù hợp.
-                    </p>
-                  ) : null}
-                </div>
-              )}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="flex items-center gap-2 text-sm">
+        <div className="order-2 ml-auto flex shrink-0 items-center gap-1 text-sm md:order-3 md:ml-0 md:gap-2">
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -314,21 +236,21 @@ export function MarketplaceNavbar() {
             </DropdownMenu>
           ) : (
             <>
-              <Button asChild variant="ghost" className="gap-2">
-                <Link to="/dang-ky" className="inline-flex items-center gap-2">
+              <Button asChild variant="ghost" size="sm" className="gap-1 px-2 sm:gap-2 sm:px-3">
+                <Link to="/dang-ky" className="inline-flex items-center gap-1 sm:gap-2">
                   <UserPlus className="h-4 w-4" />
-                  Đăng ký
+                  <span className="hidden sm:inline">Đăng ký</span>
                 </Link>
               </Button>
-              <Button asChild variant="ghost" className="gap-2">
-                <Link to="/dang-nhap" className="inline-flex items-center gap-2">
+              <Button asChild variant="ghost" size="sm" className="gap-1 px-2 sm:gap-2 sm:px-3">
+                <Link to="/dang-nhap" className="inline-flex items-center gap-1 sm:gap-2">
                   <LogIn className="h-4 w-4" />
-                  Đăng nhập
+                  <span className="hidden sm:inline">Đăng nhập</span>
                 </Link>
               </Button>
             </>
           )}
-          <span className="mx-1 h-6 w-px bg-gray-200" />
+          <span className="mx-0.5 hidden h-6 w-px bg-gray-200 sm:block" />
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -400,7 +322,7 @@ export function MarketplaceNavbar() {
           ) : null}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" className="relative">
+              <Button size="icon" variant="ghost" className="relative" aria-label="Giỏ hàng">
                 <ShoppingCart className="h-5 w-5 text-primary" />
                 {cartCount > 0 ? (
                   <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-white">
@@ -409,7 +331,7 @@ export function MarketplaceNavbar() {
                 ) : null}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-96 p-0">
+            <DropdownMenuContent align="end" className="w-[min(100vw-2rem,24rem)] p-0 sm:w-96">
               <div className="p-4">
                 <p className="mb-3 text-sm font-semibold text-[#27272a]">Giỏ hàng của bạn</p>
                 {cartCount === 0 ? (
@@ -447,10 +369,94 @@ export function MarketplaceNavbar() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        <div ref={searchBoxRef} className="relative order-3 w-full min-w-0 md:order-2 md:flex-1">
+          <form
+            onSubmit={handleSubmitSearch}
+            className="flex min-h-11 flex-col gap-2 rounded-xl border bg-white p-2 sm:h-12 sm:flex-row sm:items-center sm:gap-0 sm:px-2 sm:py-0"
+          >
+          <div className="hidden shrink-0 items-center sm:flex">
+            <Select defaultValue="goods">
+              <SelectTrigger className="h-9 w-[130px] border-0 shadow-none focus:ring-0 md:w-[150px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="goods">Hàng hóa</SelectItem>
+                <SelectItem value="shops">Cửa hàng</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="mx-2 hidden h-6 w-px bg-gray-200 sm:block" />
+          </div>
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+          <Input
+            className="min-w-0 flex-1 border-0 shadow-none focus-visible:ring-0"
+            placeholder="Tìm kiếm sản phẩm"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+          />
+          <Button type="submit" size="icon" variant="secondary" className="h-9 w-10 shrink-0 rounded-md">
+            <Search className="h-4 w-4" />
+          </Button>
+          </div>
+          </form>
+
+          {isSearchFocused && keyword.trim().length >= 2 ? (
+            <div className="absolute left-0 right-0 top-full z-40 mt-1 max-h-[min(70vh,24rem)] overflow-y-auto rounded-lg border bg-white p-2 shadow-lg sm:top-[52px] sm:mt-0">
+              <p className="px-2 pb-1 text-xs font-medium text-muted-foreground">
+                Gợi ý tìm kiếm
+              </p>
+              {isLoadingRecommend ? (
+                <p className="px-2 py-3 text-sm text-muted-foreground">Đang tìm gợi ý...</p>
+              ) : (
+                <div className="space-y-1">
+                  {recommendedCategories.map((category) => (
+                    <button
+                      key={category.id}
+                      type="button"
+                      className="flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm hover:bg-slate-50"
+                      onClick={() => {
+                        const next = new URLSearchParams();
+                        next.set('categorySlug', category.slug);
+                        next.set('q', keyword.trim());
+                        handleSelectRecommendation(next);
+                      }}
+                    >
+                      <span>Danh mục: {category.name}</span>
+                      <span className="text-xs text-muted-foreground">/{category.slug}</span>
+                    </button>
+                  ))}
+                  {recommendedProducts.map((product) => (
+                    <button
+                      key={product.id}
+                      type="button"
+                      className="flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm hover:bg-slate-50"
+                      onClick={() => {
+                        const next = new URLSearchParams();
+                        next.set('q', product.name);
+                        handleSelectRecommendation(next);
+                      }}
+                    >
+                      <span className="truncate pr-2">{product.name}</span>
+                      <span className="text-xs text-primary">
+                        {product.price.toLocaleString('vi-VN')}đ
+                      </span>
+                    </button>
+                  ))}
+                  {!recommendedCategories.length && !recommendedProducts.length ? (
+                    <p className="px-2 py-3 text-sm text-muted-foreground">
+                      Chưa có gợi ý phù hợp.
+                    </p>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <div className="border-y bg-[#f8faf8]">
-        <div className="container flex h-11 items-center gap-4 text-xs">
+        <div className="container flex items-center gap-3 overflow-x-auto py-2 text-xs [-ms-overflow-style:none] [scrollbar-width:none] md:h-11 md:py-0 [&::-webkit-scrollbar]:hidden">
           <span className="font-semibold text-primary">Cam kết</span>
           <span>100% hàng chất lượng</span>
           <span className="h-4 w-px bg-gray-300" />

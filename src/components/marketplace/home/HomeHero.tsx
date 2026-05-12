@@ -32,7 +32,8 @@ export const HomeHero = () => {
         <span className="h-0.5 w-8 rounded bg-primary" />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      {/* Trên mobile chỉ giữ banner chính — lưới 4 ô chiếm dọc và ít giá trị khi màn nhỏ */}
+      <div className="hidden gap-3 md:grid md:grid-cols-2 xl:grid-cols-4">
         {heroGridItems.map((item) => (
           <article key={item.id} className="overflow-hidden rounded-lg border bg-white shadow-card">
             <img src={item.image} alt={item.alt} className="h-full w-full object-cover" />

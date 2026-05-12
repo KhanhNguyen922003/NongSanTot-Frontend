@@ -46,7 +46,7 @@ const ProductDetail = () => {
 
   if (isLoading) {
     return (
-      <main className="container py-8">
+      <main className="container px-3 py-6 sm:px-4">
         <Card className="rounded-lg shadow-card">
           <CardContent className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -59,7 +59,7 @@ const ProductDetail = () => {
 
   if (isError || !product) {
     return (
-      <main className="container py-8">
+      <main className="container px-3 py-6 sm:px-4">
         <Card className="rounded-lg shadow-card">
           <CardContent className="space-y-4 p-6">
             <p className="text-sm text-muted-foreground">
@@ -133,13 +133,17 @@ const ProductDetail = () => {
   };
 
   return (
-    <main className="container space-y-6 py-6">
+    <main className="container space-y-4 px-3 py-4 sm:space-y-6 sm:px-4 sm:py-6">
       <Card className="rounded-lg shadow-card">
-        <CardContent className="grid gap-6 p-5 md:grid-cols-[1fr_1.1fr]">
+        <CardContent className="grid gap-5 p-4 sm:gap-6 sm:p-5 md:grid-cols-[1fr_1.1fr]">
           <div className="space-y-3">
             <div className="overflow-hidden rounded-lg border bg-slate-50">
               {mainImage ? (
-                <img src={mainImage} alt={product.name} className="h-full min-h-[300px] w-full object-cover" />
+                <img
+                  src={mainImage}
+                  alt={product.name}
+                  className="h-full min-h-[220px] w-full object-cover sm:min-h-[280px] md:min-h-[300px]"
+                />
               ) : (
                 <div className="flex min-h-[300px] items-center justify-center text-sm text-muted-foreground">
                   Chưa có ảnh sản phẩm
@@ -147,7 +151,7 @@ const ProductDetail = () => {
               )}
             </div>
             {galleryImages.length > 1 ? (
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                 {galleryImages.slice(0, 8).map((image) => {
                   const selected = mainImage === image;
                   return (
@@ -161,7 +165,7 @@ const ProductDetail = () => {
                       aria-label="Xem ảnh"
                       aria-pressed={selected}
                     >
-                      <img src={image} alt="" className="h-20 w-full object-cover" />
+                      <img src={image} alt="" className="h-14 w-full object-cover sm:h-20" />
                     </button>
                   );
                 })}
@@ -239,9 +243,9 @@ const ProductDetail = () => {
               ))}
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
               <Button
-                className="min-w-40"
+                className="w-full min-w-0 sm:w-auto sm:min-w-40"
                 disabled={addCartItem.isPending || !canAddToCart}
                 onClick={() => void onAddToCart()}
               >
@@ -249,12 +253,14 @@ const ProductDetail = () => {
               </Button>
               <Button
                 variant="outline"
-                className="min-w-44 gap-2"
+                className="w-full min-w-0 gap-2 sm:w-auto sm:min-w-44"
                 disabled={openConversation.isPending}
                 onClick={() => void onMessageShop()}
               >
-                <MessageCircle className="h-4 w-4" />
-                {openConversation.isPending ? 'Đang mở...' : 'Nhắn tin shop / Trả giá'}
+                <MessageCircle className="h-4 w-4 shrink-0" />
+                <span className="truncate sm:whitespace-normal">
+                  {openConversation.isPending ? 'Đang mở...' : 'Nhắn tin shop / Trả giá'}
+                </span>
               </Button>
             </div>
             {addCartMessage ? (
@@ -289,7 +295,7 @@ const ProductDetail = () => {
                     Giai đoạn {diary.stageOrder}: {diary.stageName}
                   </p>
                   <p className="text-sm text-[#27272a]">{diary.description || 'Không có mô tả.'}</p>
-                  <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
                     {(diary.images ?? []).map((image) => (
                       <img key={image} src={image} alt={diary.stageName} className="h-24 w-full rounded-md object-cover" />
                     ))}

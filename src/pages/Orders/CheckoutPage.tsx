@@ -143,7 +143,7 @@ const CheckoutPage = () => {
   }
 
   return (
-    <main className="container space-y-6 py-6">
+    <main className="container space-y-4 px-3 py-4 sm:space-y-6 sm:px-4 sm:py-6">
       <Card className="rounded-lg shadow-card">
         <CardHeader>
           <CardTitle className="text-xl text-[#27272a]">Xác nhận đơn hàng</CardTitle>
@@ -227,12 +227,13 @@ const CheckoutPage = () => {
             </p>
           </div>
 
-          <div className="flex justify-end gap-3">
-            <Button asChild variant="outline">
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
+            <Button asChild variant="outline" className="w-full sm:w-auto">
               <Link to="/gio-hang">Quay lại giỏ hàng</Link>
             </Button>
             <Button
               type="button"
+              className="w-full sm:w-auto"
               disabled={checkoutOrder.isPending || !selectedAddress?.id}
               onClick={() => void handleCheckout()}
             >

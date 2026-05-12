@@ -37,22 +37,23 @@ const AdminProductsPage = () => {
           <p className="text-sm text-muted-foreground">Không có sản phẩm nào chờ duyệt.</p>
         ) : (
           <div className="overflow-hidden rounded-lg border">
-            <div className="grid grid-cols-[1.5fr_1fr_120px_120px] gap-3 bg-slate-50 px-4 py-3 text-xs font-medium uppercase text-muted-foreground">
+            <div className="hidden grid-cols-[1.5fr_1fr_120px_120px] gap-3 bg-slate-50 px-4 py-3 text-xs font-medium uppercase text-muted-foreground md:grid">
               <span>Sản phẩm</span>
               <span>Shop</span>
               <span>Trust</span>
               <span className="text-right">Thao tác</span>
             </div>
+            <div className="divide-y">
             {data.map((product) => (
               <div
                 key={product.id}
-                className="grid grid-cols-[1.5fr_1fr_120px_120px] items-center gap-3 border-t px-4 py-3"
+                className="flex flex-col gap-3 px-4 py-4 md:grid md:grid-cols-[1.5fr_1fr_120px_120px] md:items-center md:gap-3 md:py-3"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   {product.coverImage ? (
-                    <img src={product.coverImage} alt={product.name} className="h-14 w-14 rounded-md object-cover" />
+                    <img src={product.coverImage} alt={product.name} className="h-14 w-14 shrink-0 rounded-md object-cover" />
                   ) : (
-                    <div className="h-14 w-14 rounded-md bg-slate-100" />
+                    <div className="h-14 w-14 shrink-0 rounded-md bg-slate-100" />
                   )}
                   <div className="min-w-0">
                     <p className="truncate font-medium text-[#27272a]">{product.name}</p>
@@ -61,18 +62,23 @@ const AdminProductsPage = () => {
                     </p>
                   </div>
                 </div>
-                <div className="min-w-0 text-sm">
+                <div className="min-w-0 border-t border-dashed pt-3 text-sm md:border-0 md:pt-0">
+                  <p className="truncate text-xs font-medium uppercase text-muted-foreground md:hidden">Shop</p>
                   <p className="truncate font-medium">{product.shopName || 'Chưa rõ shop'}</p>
                   <p className="text-muted-foreground">{product.shopOwnerPhone || 'Không có SĐT'}</p>
                 </div>
-                <Badge variant="outline">{product.trustScore ?? 0}/100</Badge>
-                <div className="text-right">
-                  <Button asChild size="sm">
+                <div className="flex flex-col gap-2 border-t border-dashed pt-3 sm:flex-row sm:items-center sm:justify-between md:border-0 md:pt-0">
+                  <div>
+                    <p className="text-xs font-medium uppercase text-muted-foreground md:hidden">Uy tín</p>
+                    <Badge variant="outline">{product.trustScore ?? 0}/100</Badge>
+                  </div>
+                  <Button asChild size="sm" className="w-full shrink-0 sm:w-auto md:w-auto">
                     <Link to={`/admin/san-pham-duyet/${product.id}`}>Duyệt</Link>
                   </Button>
                 </div>
               </div>
             ))}
+            </div>
           </div>
         )}
       </CardContent>

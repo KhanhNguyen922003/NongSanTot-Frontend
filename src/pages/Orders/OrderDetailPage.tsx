@@ -53,7 +53,7 @@ const OrderDetailPage = () => {
   };
 
   return (
-    <main className="container py-6">
+    <main className="container px-3 py-4 sm:px-4 sm:py-6">
       <Card>
         <CardHeader>
           <CardTitle>Chi tiết đơn hàng</CardTitle>
@@ -89,6 +89,7 @@ const OrderDetailPage = () => {
                     Giao nhanh (nếu có)
                   </label>
                   <Button
+                    className="w-full sm:w-auto"
                     disabled={confirmNegotiation.isPending}
                     onClick={() => void handleConfirmAddress()}
                   >
@@ -146,13 +147,13 @@ const OrderDetailPage = () => {
                   </div>
                 ))}
               </div>
-              <div className="flex gap-3">
-                <Button asChild variant="outline">
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
+                <Button asChild variant="outline" className="w-full sm:w-auto">
                   <Link to="/don-mua">Quay lại đơn mua</Link>
                 </Button>
                 <Button
                   variant="outline"
-                  className="border-red-200 text-red-700 hover:bg-red-50"
+                  className="w-full border-red-200 text-red-700 hover:bg-red-50 sm:w-auto"
                   disabled={
                     cancelOrder.isPending ||
                     data.status === 'cancelled' ||

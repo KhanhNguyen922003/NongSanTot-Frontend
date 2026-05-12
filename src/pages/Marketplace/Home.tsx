@@ -1,9 +1,16 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2, ShieldCheck, Sparkles } from 'lucide-react';
+import { ListFilter, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
 import { ProductCard } from '@/components/marketplace/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { HomeHero } from '@/components/marketplace/home/HomeHero';
 import { HomeSidebar } from '@/components/marketplace/home/HomeSidebar';
 import { marketplaceQuickFilters } from '@/features/marketplace/data';
@@ -14,6 +21,7 @@ import { getApiErrorMessage } from '@/core/api/getApiErrorMessage';
 import { useSearchParams } from 'react-router-dom';
 
 const Home = () => {
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const user = useAuthStore((state) => state.user);
   const isSeller = user?.role === 'seller';
@@ -63,28 +71,58 @@ const Home = () => {
     });
   };
 
+  const sidebarProps = {
+    quickFilters: marketplaceQuickFilters,
+    role: user?.role,
+    isLoadingMyShops,
+    hasSellerShop,
+    minRating: minRating ?? '',
+    minPrice: minPrice ?? '',
+    maxPrice: maxPrice ?? '',
+    onMinRatingChange: (value: string) => updateParam('minRating', value || undefined),
+    onMinPriceChange: (value: string) => updateParam('minPrice', value),
+    onMaxPriceChange: (value: string) => updateParam('maxPrice', value),
+    onClearFilters: clearFilters,
+    selectedCategorySlug: categorySlug || undefined,
+    onCategorySelect: (slug?: string) => updateParam('categorySlug', slug),
+    selectedTag: selectedTag || undefined,
+    onTagSelect: (tag?: string) => updateParam('tag', tag),
+  };
+
   return (
     <main className="container py-4 md:py-6">
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[255px_1fr]">
-        <HomeSidebar
-          quickFilters={marketplaceQuickFilters}
-          role={user?.role}
-          isLoadingMyShops={isLoadingMyShops}
-          hasSellerShop={hasSellerShop}
-            minRating={minRating ?? ''}
-            minPrice={minPrice ?? ''}
-            maxPrice={maxPrice ?? ''}
-            onMinRatingChange={(value) => updateParam('minRating', value || undefined)}
-            onMinPriceChange={(value) => updateParam('minPrice', value)}
-            onMaxPriceChange={(value) => updateParam('maxPrice', value)}
-            onClearFilters={clearFilters}
-            selectedCategorySlug={categorySlug || undefined}
-            onCategorySelect={(slug) => updateParam('categorySlug', slug)}
-            selectedTag={selectedTag || undefined}
-            onTagSelect={(tag) => updateParam('tag', tag)}
-        />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[255px_1fr] lg:gap-8">
+        <aside className="hidden lg:block">
+          <HomeSidebar {...sidebarProps} />
+        </aside>
 
-        <section className="space-y-6">
+        <section className="min-w-0 space-y-4 md:space-y-6">
+          <div className="lg:hidden">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full gap-2 border-primary/30 bg-white"
+              onClick={() => setMobileFiltersOpen(true)}
+            >
+              <ListFilter className="h-4 w-4 shrink-0 text-primary" />
+              Danh mục &amp; bộ lọc
+            </Button>
+            <Dialog open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+              <DialogContent className="flex max-h-[85vh] max-w-md flex-col gap-0 p-0 sm:max-w-lg">
+                <DialogHeader className="shrink-0 border-b px-6 py-4 text-left">
+                  <DialogTitle>Danh mục &amp; bộ lọc</DialogTitle>
+                </DialogHeader>
+                <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+                  <HomeSidebar {...sidebarProps} />
+                </div>
+                <DialogFooter className="shrink-0 border-t px-4 py-3 sm:px-6">
+                  <Button type="button" className="w-full sm:w-auto" onClick={() => setMobileFiltersOpen(false)}>
+                    Xong
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
           {isAdmin ? (
             <Card className="rounded-lg border-primary/20 bg-primary/5 shadow-card">
               <CardContent className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
@@ -141,7 +179,9 @@ const Home = () => {
                     ))}
                   </div>
                   <p className="mt-6 text-center text-xs text-muted-foreground">
-                    Đang hiển thị {filteredProducts.length} sản phẩm. Dùng bộ lọc bên trái để thu hẹp kết quả.
+                    Đang hiển thị {filteredProducts.length} sản phẩm.
+                    <span className="hidden lg:inline"> Dùng bộ lọc bên trái để thu hẹp kết quả.</span>
+                    <span className="lg:hidden"> Dùng nút &quot;Danh mục &amp; bộ lọc&quot; phía trên để lọc.</span>
                   </p>
                 </>
               )}

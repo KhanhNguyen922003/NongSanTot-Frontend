@@ -15,7 +15,7 @@ const BuyOrdersPage = () => {
   }
 
   return (
-    <main className="container py-6">
+    <main className="container px-3 py-4 sm:px-4 sm:py-6">
       <Card>
         <CardHeader>
           <CardTitle>Đơn mua của tôi</CardTitle>
@@ -33,14 +33,14 @@ const BuyOrdersPage = () => {
           ) : (
             <div className="space-y-3">
               {data.map((order) => (
-                <div key={order.id} className="flex items-center justify-between rounded-md border p-3">
-                  <div>
+                <div key={order.id} className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
                     <p className="font-medium text-[#27272a]">Đơn #{order.id.slice(0, 8)}</p>
                     <p className="text-sm text-muted-foreground">
                       {order.finalPrice.toLocaleString('vi-VN')}đ · {order.status}
                     </p>
                   </div>
-                  <Button asChild variant="outline" size="sm">
+                  <Button asChild variant="outline" size="sm" className="w-full shrink-0 sm:w-auto">
                     <Link to={`/don-hang/${order.id}`}>Xem chi tiết</Link>
                   </Button>
                 </div>
