@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import { MessengerDock } from '@/components/messaging/MessengerDock';
 import { MarketplaceFooter } from '@/components/marketplace/MarketplaceFooter';
 import { MarketplaceNavbar } from '@/components/marketplace/MarketplaceNavbar';
 
@@ -8,6 +9,7 @@ const MarketplaceLayout = () => {
       <MarketplaceNavbar />
       <Outlet />
       <MarketplaceFooter />
+      <MessengerDock />
     </div>
   );
 };

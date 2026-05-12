@@ -3,6 +3,7 @@ import { queryKeys } from '@/constants/queryKeys';
 import { apiClient } from '@/core/api/apiClient';
 import { queryClient } from '@/queries';
 import type {
+  BuyerConfirmNegotiationBody,
   CheckoutBody,
   CheckoutResult,
   CheckoutShippingQuote,
@@ -95,5 +96,24 @@ export const useCancelOrderMutation = (orderId: string) =>
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders.mySell });
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.shopDashboard });
+    },
+  });
+
+export const useBuyerConfirmNegotiationOrderMutation = (orderId: string) =>
+  useMutation({
+    mutationFn: async (body: BuyerConfirmNegotiationBody) => {
+      const { data } = await apiClient.patch<OrderDetail>(
+        `/orders/${orderId}/negotiation/confirm-address`,
+        body,
+      );
+      return data;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.myBuy });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.messaging.mine });
+      void queryClient.invalidateQueries({
+        predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === 'conversations',
+      });
     },
   });

@@ -19,6 +19,11 @@ export const queryKeys = {
   cart: {
     me: ['carts', 'me'] as const,
   },
+  messaging: {
+    mine: ['conversations', 'me'] as const,
+    detail: (id: string) => ['conversations', id] as const,
+    messages: (id: string) => ['conversations', id, 'messages'] as const,
+  },
   orders: {
     shippingQuote: (addressId: string, fastShipping: boolean) =>
       ['orders', 'checkout', 'quote', addressId, fastShipping] as const,

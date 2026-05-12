@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { Controller, useFieldArray, useForm, type Resolver } from "react-hook-form";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { auth } from "../../../../firebase.config";
+import ghtkLogo from "@/assets/Logo-GHTK-Slogan.webp";
 import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
 import AddressSelect2, { type AddressSelection } from "@/components/common/AddressSelect2";
 import DropzoneUpload, { type UploadedFile } from "@/components/common/Dropzone";
@@ -16,22 +17,38 @@ import { FormSelect } from "@/components/form/FormSelect";
 import { FormTextarea } from "@/components/form/FormTextarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  SellerCreateProductOnboarding,
+  hasSeenSellerCreateProductOnboarding,
+} from "@/components/seller/SellerCreateProductOnboarding";
 import { sellerHubPaths } from "@/constants/sellerHub";
 import { getApiErrorMessage } from "@/core/api/getApiErrorMessage";
+import { useCategoriesQuery } from "@/queries/categories/useCategories";
 import { useCreateProductMutation } from "@/queries/products/useCreateProduct";
 import { useMyShopsQuery } from "@/queries/shops/useMyShops";
-import { categoryOptions, ProductFormValues, productSchema, shippingOptions, unitOptions } from "./helper";
+import { ProductFormValues, productSchema, shippingOptions, unitOptions } from "./helper";
 
 const SIGNIN_PATH = "/dang-nhap";
-const STEP_LABELS = ["Thông tin cơ bản", "Media sản phẩm", "Giai đoạn phát triển", "Vận chuyển & xem trước"] as const;
+const STEP_LABELS = ["Thông tin cơ bản", "Ảnh / video", "Nhật ký (tuỳ chọn)", "Giao hàng & gửi bài"] as const;
 
 const CreateNewProduct = () => {
   const navigate = useNavigate();
   const [firebaseUser, setFirebaseUser] = useState<User | null | "pending">("pending");
   const [submitMessage, setSubmitMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [selectedShippingServiceId, setSelectedShippingServiceId] = useState<string>("");
+  const [selectedShippingServiceId, setSelectedShippingServiceId] = useState<string>("1");
   const [currentStep, setCurrentStep] = useState(0);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [createdProductId, setCreatedProductId] = useState<string | null>(null);
   const createProduct = useCreateProductMutation();
+  const { data: categories = [] } = useCategoriesQuery();
 
   const canQueryShops = typeof firebaseUser === "object" && firebaseUser !== null;
   const { data: myShops, isLoading: myShopsLoading, isError: myShopsError } = useMyShopsQuery(canQueryShops);
@@ -52,7 +69,7 @@ const CreateNewProduct = () => {
       pickupAddressDisplay: "",
       pickupReceiverName: "",
       pickupReceiverPhone: "",
-      preferredShippingServiceId: "",
+      preferredShippingServiceId: "1",
       growthDiary: [],
     },
   });
@@ -75,6 +92,21 @@ const CreateNewProduct = () => {
   }, [navigate]);
 
   const selectedShop = useMemo(() => myShops || null, [myShops]);
+  const selectedShippingMethod = form.watch("shippingMethods")?.[0];
+
+  useEffect(() => {
+    if (!selectedShop || hasSeenSellerCreateProductOnboarding()) return;
+    setOnboardingOpen(true);
+  }, [selectedShop]);
+
+  useEffect(() => {
+    if (selectedShippingMethod !== "GHTK") return;
+    const cur = form.getValues("preferredShippingServiceId");
+    if (!cur) {
+      form.setValue("preferredShippingServiceId", "1", { shouldValidate: true });
+      setSelectedShippingServiceId("1");
+    }
+  }, [selectedShippingMethod, form]);
 
   const updatePickupAddress = (address: AddressSelection) => {
     form.setValue("pickupAddressDisplay", address.displayAddress, { shouldValidate: true });
@@ -85,8 +117,26 @@ const CreateNewProduct = () => {
   const validateCurrentStep = async () => {
     if (currentStep === 0) return form.trigger(["categoryId", "name", "description", "origin", "price", "stock", "unit"]);
     if (currentStep === 1) return form.trigger(["mediaFiles"]);
-    if (currentStep === 2) return form.trigger(["growthDiary"]);
-    return form.trigger(["shippingMethods", "pickupAddressDisplay", "pickupReceiverName", "pickupReceiverPhone"]);
+    if (currentStep === 2) {
+      const rows = form.getValues("growthDiary") ?? [];
+      if (rows.length === 0) return true;
+      return form.trigger(["growthDiary"]);
+    }
+    if (form.getValues("shippingMethods")?.[0] === "GHTK") {
+      return form.trigger([
+        "shippingMethods",
+        "pickupAddressDisplay",
+        "pickupReceiverName",
+        "pickupReceiverPhone",
+        "preferredShippingServiceId",
+      ]);
+    }
+    return form.trigger([
+      "shippingMethods",
+      "pickupAddressDisplay",
+      "pickupReceiverName",
+      "pickupReceiverPhone",
+    ]);
   };
 
   const moveNext = async () => {
@@ -97,6 +147,13 @@ const CreateNewProduct = () => {
 
   const moveBack = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
 
+  const skipDiaryAndContinue = () => {
+    form.setValue("growthDiary", [], { shouldValidate: true });
+    diaryFieldArray.replace([]);
+    form.clearErrors("growthDiary");
+    setCurrentStep(3);
+  };
+
   const onSubmit = form.handleSubmit(async (values) => {
     if (!selectedShop) {
       setSubmitMessage({ type: "error", text: "Bạn cần có cửa hàng trước khi đăng sản phẩm." });
@@ -104,6 +161,7 @@ const CreateNewProduct = () => {
     }
 
     const payload = {
+      categoryId: values.categoryId || undefined,
       name: values.name.trim(),
       description: values.description.trim(),
       origin: values.origin.trim(),
@@ -112,26 +170,32 @@ const CreateNewProduct = () => {
       unit: values.unit.trim(),
       images: values.mediaFiles.filter((item) => item.type === "image").map((item) => item.url),
       videos: values.mediaFiles.filter((item) => item.type === "video").map((item) => item.url),
-      shippingMethods: values.shippingMethods,
+      shippingMethods: values.shippingMethods.slice(0, 1),
       pickupAddress: {
         displayAddress: values.pickupAddressDisplay,
         receiverName: values.pickupReceiverName,
         receiverPhone: values.pickupReceiverPhone,
       },
-      preferredShippingServiceId: values.preferredShippingServiceId ? Number(values.preferredShippingServiceId) : undefined,
+      preferredShippingServiceId:
+        values.shippingMethods[0] === "GHTK" && values.preferredShippingServiceId
+          ? Number(values.preferredShippingServiceId)
+          : undefined,
       isAvailable: true,
-      growthDiary: values.growthDiary.map((item) => ({
-        stageName: item.stageName.trim(),
-        logDate: item.logDate,
-        description: item.description?.trim() || null,
-        images: item.mediaFiles.filter((media) => media.type === "image").map((media) => media.url),
-      })),
+      growthDiary:
+        values.growthDiary.length > 0
+          ? values.growthDiary.map((item) => ({
+              stageName: item.stageName.trim(),
+              logDate: item.logDate,
+              description: item.description?.trim() || null,
+              images: item.mediaFiles.filter((media) => media.type === "image").map((media) => media.url),
+            }))
+          : undefined,
     };
 
     try {
-      await createProduct.mutateAsync(payload);
-      setSubmitMessage({ type: "success", text: "Đã tạo sản phẩm thành công. Sản phẩm đang chờ kiểm duyệt." });
-      navigate(sellerHubPaths.overview);
+      const created = await createProduct.mutateAsync(payload);
+      setSubmitMessage(null);
+      setCreatedProductId(created.id);
     } catch (error) {
       setSubmitMessage({ type: "error", text: getApiErrorMessage(error, "Không thể tạo sản phẩm.") });
     }
@@ -198,7 +262,7 @@ const CreateNewProduct = () => {
         <CardHeader className="space-y-3">
           <CardTitle className="text-2xl text-[#27272a]">Đăng sản phẩm mới</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Shop: <span className="font-medium text-foreground">{selectedShop.name}</span>. Hoàn tất thông tin để tạo sản phẩm theo schema mới.
+            Cửa hàng: <span className="font-medium text-foreground">{selectedShop.name}</span>. Điền đủ các bước bên dưới rồi gửi bài — bài sẽ chờ duyệt trước khi lên chợ.
           </p>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -226,7 +290,7 @@ const CreateNewProduct = () => {
                         label="Danh mục"
                         value={field.value}
                         onValueChange={field.onChange}
-                        options={categoryOptions.map((item) => ({ value: item.id, label: item.label }))}
+                        options={categories.map((item) => ({ value: item.id, label: item.name }))}
                         placeholder="Chọn danh mục"
                         error={form.formState.errors.categoryId?.message}
                       />
@@ -281,7 +345,7 @@ const CreateNewProduct = () => {
                   />
                   <FormInput
                     id="stock"
-                    label="Tồn kho"
+                    label="Số lượng đang bán"
                     type="number"
                     min={0}
                     step="0.1"
@@ -325,21 +389,33 @@ const CreateNewProduct = () => {
 
             {currentStep === 2 ? (
               <div className="space-y-4 rounded-lg border p-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-[#27272a]">Lịch sử phát triển</h3>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => diaryFieldArray.append({ stageName: "", logDate: "", description: "", mediaFiles: [] })}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Thêm giai đoạn
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-[#27272a]">Nhật ký canh tác (tuỳ chọn)</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Thêm ảnh theo từng giai đoạn giúp khách yên tâm hơn. Không có cũng vẫn đăng bài được.
+                    </p>
+                  </div>
+                  <Button type="button" variant="secondary" size="sm" className="shrink-0" onClick={skipDiaryAndContinue}>
+                    Bỏ qua bước này
                   </Button>
                 </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    diaryFieldArray.append({ stageName: "", logDate: "", description: "", mediaFiles: [] })
+                  }
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Thêm một giai đoạn
+                </Button>
 
                 {diaryFieldArray.fields.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Thêm tối thiểu 1 giai đoạn có ảnh để tăng độ uy tín sản phẩm.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Bạn có thể nhấn &quot;Tiếp tục&quot; để sang bước giao hàng, hoặc thêm giai đoạn ở trên.
+                  </p>
                 ) : null}
 
                 {diaryFieldArray.fields.map((item, index) => (
@@ -400,27 +476,39 @@ const CreateNewProduct = () => {
             {currentStep === 3 ? (
               <>
                 <div className="space-y-3">
-                  <p className="text-sm font-medium text-[#27272a]">Phương thức vận chuyển</p>
+                  <p className="text-sm font-medium text-[#27272a]">Cách giao hàng</p>
                   <Controller
                     name="shippingMethods"
                     control={form.control}
                     render={({ field }) => (
                       <div className="space-y-2">
                         {shippingOptions.map((method) => {
-                          const checked = field.value.includes(method.id);
+                          const checked = field.value?.[0] === method.id;
                           return (
-                            <label key={method.id} className="flex items-center gap-2 text-sm">
+                            <label
+                              key={method.id}
+                              className={`flex cursor-pointer items-center gap-3 rounded-md border p-3 text-sm transition ${
+                                checked ? "border-primary bg-primary/5" : "border-slate-200 hover:bg-slate-50"
+                              }`}
+                            >
                               <input
-                                type="checkbox"
+                                type="radio"
+                                name="shippingMethod"
                                 checked={checked}
-                                onChange={(event) => {
-                                  const next = event.target.checked
-                                    ? [...field.value, method.id]
-                                    : field.value.filter((item) => item !== method.id);
-                                  field.onChange(next);
+                                onChange={() => {
+                                  field.onChange([method.id]);
+                                  if (method.id !== "GHTK") {
+                                    setSelectedShippingServiceId("");
+                                    form.setValue("preferredShippingServiceId", "");
+                                  }
                                 }}
                               />
-                              {method.label}
+                              <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                                <span>{method.label}</span>
+                                {method.id === "GHTK" ? (
+                                  <img src={ghtkLogo} alt="GHTK" className="h-5 w-auto object-contain" />
+                                ) : null}
+                              </div>
                             </label>
                           );
                         })}
@@ -437,28 +525,35 @@ const CreateNewProduct = () => {
                   <p className="text-xs text-red-600">{form.formState.errors.pickupAddressDisplay.message}</p>
                 ) : null}
 
-                <Controller
-                  name="preferredShippingServiceId"
-                  control={form.control}
-                  render={({ field }) => (
-                    <ShippingServiceSelect
-                      value={selectedShippingServiceId}
-                      onSelectService={(service) => {
-                        const nextValue = String(service.serviceId);
-                        setSelectedShippingServiceId(nextValue);
-                        field.onChange(nextValue);
-                      }}
-                    />
-                  )}
-                />
+                {selectedShippingMethod === "GHTK" ? (
+                  <Controller
+                    name="preferredShippingServiceId"
+                    control={form.control}
+                    render={({ field }) => (
+                      <ShippingServiceSelect
+                        value={field.value || selectedShippingServiceId}
+                        onSelectService={(service) => {
+                          const nextValue = String(service.serviceId);
+                          setSelectedShippingServiceId(nextValue);
+                          field.onChange(nextValue);
+                        }}
+                      />
+                    )}
+                  />
+                ) : (
+                  <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-muted-foreground">
+                    Bạn chọn <span className="font-medium text-foreground">tự giao cho khách</span>. Phần chọn dịch vụ GHTK
+                    không dùng ở bước này.
+                  </div>
+                )}
 
                 <div className="rounded-lg border bg-slate-50 p-4 text-sm">
                   <p className="mb-2 font-medium text-[#27272a]">Xem nhanh trước khi đăng</p>
                   <ul className="space-y-1 text-muted-foreground">
                     <li>- Tên: {form.watch("name") || "Chưa nhập"}</li>
                     <li>- Giá: {Number(form.watch("price") || 0).toLocaleString("vi-VN")} VND</li>
-                    <li>- Media: {form.watch("mediaFiles")?.length || 0} tệp</li>
-                    <li>- Giai đoạn phát triển: {form.watch("growthDiary")?.length || 0}</li>
+                    <li>- Ảnh / video: {form.watch("mediaFiles")?.length || 0} tệp</li>
+                    <li>- Nhật ký: {form.watch("growthDiary")?.length ? `${form.watch("growthDiary")?.length} giai đoạn` : "Không thêm"}</li>
                   </ul>
                 </div>
               </>
@@ -470,7 +565,7 @@ const CreateNewProduct = () => {
       <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-white/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3">
           <Button type="button" variant="outline" onClick={() => void navigate(sellerHubPaths.overview)}>
-            Quay về dashboard
+            Về trang quản lý
           </Button>
           <div className="flex items-center gap-3">
             <Button type="button" variant="outline" onClick={moveBack} disabled={currentStep === 0}>
@@ -488,6 +583,37 @@ const CreateNewProduct = () => {
           </div>
         </div>
       </div>
+
+      <SellerCreateProductOnboarding open={onboardingOpen} onOpenChange={setOnboardingOpen} />
+
+      <Dialog
+        open={!!createdProductId}
+        onOpenChange={(open) => {
+          if (!open) setCreatedProductId(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Đã gửi bài đăng</DialogTitle>
+            <DialogDescription className="text-left text-sm">
+              Bài của bạn đang chờ duyệt. Khi được duyệt, sản phẩm sẽ hiện trên chợ cho người mua.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button type="button" variant="outline" asChild>
+              <Link to={sellerHubPaths.overview}>Về trang quản lý</Link>
+            </Button>
+            <Button type="button" variant="outline" asChild>
+              <Link to={sellerHubPaths.products}>Danh sách sản phẩm</Link>
+            </Button>
+            {createdProductId ? (
+              <Button type="button" asChild>
+                <Link to={`/san-pham/${createdProductId}`}>Xem trang sản phẩm</Link>
+              </Button>
+            ) : null}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

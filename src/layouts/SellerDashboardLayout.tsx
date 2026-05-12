@@ -11,6 +11,7 @@ import { Home, Menu, Store } from "lucide-react";
 import { auth } from "../../firebase.config";
 import { AuthPageChrome } from "@/components/auth/AuthPageChrome";
 import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
+import { MessengerDock } from "@/components/messaging/MessengerDock";
 import {
   SellerDashboardSidebar,
   SellerSidebarCloseButton,
@@ -190,6 +191,7 @@ const SellerDashboardLayout = () => {
           </main>
         </div>
       </div>
+      <MessengerDock />
     </div>
   );
 };

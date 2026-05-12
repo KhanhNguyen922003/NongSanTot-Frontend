@@ -1,4 +1,4 @@
-import { Bell, CircleHelp, Globe, LogIn, Search, ShoppingCart, UserPlus, LogOut, User } from 'lucide-react';
+import { Bell, CircleHelp, Globe, Loader2, LogIn, MessageCircle, Search, ShoppingCart, UserPlus, LogOut, User } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
@@ -9,10 +9,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMyCartQuery } from '@/queries/carts/useCarts';
+import { useMyConversationsQuery } from '@/queries/messaging/useMessaging';
 import { useCategoriesQuery } from '@/queries/categories/useCategories';
 import { useProductsQuery } from '@/queries/products/useProducts';
 import { sellerHubPaths } from '@/constants/sellerHub';
 import useAuthStore from '@/stores/auth.store';
+import { useMessengerDockStore } from '@/stores/messengerDock.store';
 
 const getInitials = (name?: string) => {
   if (!name) return 'U';
@@ -30,6 +32,40 @@ export function MarketplaceNavbar() {
   const { user, logout } = useAuthStore();
   const { data: cartData } = useMyCartQuery(!!user);
   const cartCount = cartData?.items.length ?? 0;
+  const convQuery = useMyConversationsQuery(!!user);
+  const openMessengerEntry = useMessengerDockStore((s) => s.openEntry);
+
+  const messengerPreviewRows = useMemo(() => {
+    const buyer = (convQuery.data?.buyer ?? []).map((c) => ({
+      id: c.id,
+      title: c.shopName ?? 'Shop',
+      subtitle: c.productName ?? 'Sản phẩm',
+      last: c.lastMessage,
+      updatedAt: c.updatedAt,
+      unread: c.unreadCount ?? 0,
+      expandHref: `/tro-chuyen/${c.id}`,
+      tag: 'Mua' as const,
+    }));
+    const seller = (convQuery.data?.seller ?? []).map((c) => ({
+      id: c.id,
+      title: c.buyerHint ?? 'Khách',
+      subtitle: c.productName ?? 'Sản phẩm',
+      last: c.lastMessage,
+      updatedAt: c.updatedAt,
+      unread: c.unreadCount ?? 0,
+      expandHref: `${sellerHubPaths.messages}/${c.id}`,
+      tag: 'Bán' as const,
+    }));
+    return [...buyer, ...seller]
+      .sort((a, b) => String(b.updatedAt ?? '').localeCompare(String(a.updatedAt ?? '')))
+      .slice(0, 12);
+  }, [convQuery.data?.buyer, convQuery.data?.seller]);
+
+  const messengerUnreadTotal = useMemo(() => {
+    const b = convQuery.data?.buyer ?? [];
+    const s = convQuery.data?.seller ?? [];
+    return [...b, ...s].reduce((acc, c) => acc + (c.unreadCount ?? 0), 0);
+  }, [convQuery.data?.buyer, convQuery.data?.seller]);
   const isMarketplacePage = location.pathname === '/';
   const initialKeyword = useMemo(
     () => (isMarketplacePage ? searchParams.get('q') || '' : ''),
@@ -293,6 +329,75 @@ export function MarketplaceNavbar() {
             </>
           )}
           <span className="mx-1 h-6 w-px bg-gray-200" />
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon" variant="ghost" className="relative text-primary" aria-label="Tin nhắn">
+                  <MessageCircle className="h-5 w-5" />
+                  {messengerUnreadTotal > 0 ? (
+                    <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
+                      {messengerUnreadTotal > 99 ? '99+' : messengerUnreadTotal}
+                    </span>
+                  ) : null}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[min(100vw-2rem,22rem)] p-0">
+                <div className="border-b px-3 py-2">
+                  <p className="text-sm font-semibold text-[#27272a]">Tin nhắn</p>
+                  <p className="text-xs text-muted-foreground">Chọn hội thoại</p>
+                </div>
+                <div className="max-h-72 overflow-y-auto py-1">
+                  {convQuery.isLoading ? (
+                    <div className="flex items-center gap-2 px-3 py-4 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Đang tải…
+                    </div>
+                  ) : convQuery.isError ? (
+                    <p className="px-3 py-3 text-sm text-red-600">Không tải được danh sách.</p>
+                  ) : messengerPreviewRows.length === 0 ? (
+                    <p className="px-3 py-4 text-sm text-muted-foreground">
+                      Chưa có hội thoại. Mở từ sản phẩm → &quot;Nhắn tin shop&quot;.
+                    </p>
+                  ) : (
+                    messengerPreviewRows.map((row) => (
+                      <DropdownMenuItem
+                        key={`${row.tag}-${row.id}`}
+                        className="cursor-pointer flex-col items-start gap-0.5 py-2.5"
+                        onSelect={() => {
+                          openMessengerEntry({
+                            conversationId: row.id,
+                            expandHref: row.expandHref,
+                            title: row.title,
+                            subtitle: `${row.tag === 'Mua' ? 'Mua · ' : 'Bán · '}${row.subtitle}`,
+                          });
+                        }}
+                      >
+                        <span className="flex w-full items-center justify-between gap-2">
+                          <span className="truncate font-medium text-[#27272a]">{row.title}</span>
+                          <span className="flex shrink-0 items-center gap-1">
+                            {row.unread > 0 ? (
+                              <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                                {row.unread > 99 ? '99+' : row.unread}
+                              </span>
+                            ) : null}
+                            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                              {row.tag}
+                            </span>
+                          </span>
+                        </span>
+                        <span className="line-clamp-2 text-xs text-muted-foreground">{row.last || '…'}</span>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </div>
+                <div className="border-t p-2">
+                  <Button asChild variant="outline" size="sm" className="w-full">
+                    <Link to={sellerHubPaths.messages}>Tin nhắn · khu bán</Link>
+                  </Button>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="icon" variant="ghost" className="relative">

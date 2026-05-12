@@ -36,9 +36,17 @@ export type Order = {
   totalPrice: number;
   shippingFee: number;
   finalPrice: number;
-  status: 'pending' | 'confirmed' | 'processing' | 'shipping' | 'delivered' | 'cancelled';
+  status:
+    | 'pending'
+    | 'confirmed'
+    | 'processing'
+    | 'shipping'
+    | 'delivered'
+    | 'cancelled'
+    | 'awaiting_buyer_address';
   shippingCode: string | null;
   note: string | null;
+  negotiationOfferId?: string | null;
   createdAt: string | null;
 };
 
@@ -51,6 +59,8 @@ export type OrderDetail = Order & {
     ward: string;
     detail: string;
   } | null;
+  /** Backend: đơn từ trả giá, chờ buyer chọn địa chỉ giao. */
+  negotiationAwaitingBuyerAddress?: boolean;
   items: Array<{
     id: string;
     orderId: string;
@@ -71,6 +81,11 @@ export type OrderDetail = Order & {
 
 export type ConfirmOrderBody = {
   actualPickAddressId?: string;
+  fastShipping?: boolean;
+};
+
+export type BuyerConfirmNegotiationBody = {
+  shippingAddressId: string;
   fastShipping?: boolean;
 };
 

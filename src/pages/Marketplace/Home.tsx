@@ -121,7 +121,7 @@ const Home = () => {
               {isLoadingProducts ? (
                 <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Đang tải sản phẩm đã duyệt...
+                  Đang tải sản phẩm...
                 </div>
               ) : isProductsError ? (
                 <div className="rounded-md border border-red-100 bg-red-50 p-4 text-sm text-red-700">
@@ -140,11 +140,9 @@ const Home = () => {
                       <ProductCard key={product.id} product={product} />
                     ))}
                   </div>
-                  <div className="mt-6 flex justify-center">
-                    <Button variant="outline" className="min-w-44 text-primary">
-                      Xem thêm
-                    </Button>
-                  </div>
+                  <p className="mt-6 text-center text-xs text-muted-foreground">
+                    Đang hiển thị {filteredProducts.length} sản phẩm. Dùng bộ lọc bên trái để thu hẹp kết quả.
+                  </p>
                 </>
               )}
             </CardContent>

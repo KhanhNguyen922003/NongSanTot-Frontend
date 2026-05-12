@@ -14,6 +14,7 @@ import CreateNewProduct from '@/pages/Seller/CreateNewProduct/CreateNewProduct';
 import FarmerDashboardHome from '@/pages/Dashboard/FarmerDashboardHome';
 import SellerProductsPage from '@/pages/Dashboard/SellerProductsPage';
 import SellerMessagesPage from '@/pages/Dashboard/SellerMessagesPage';
+import ConversationThreadPage from '@/pages/Messaging/ConversationThreadPage';
 import SellerDashboardLayout from '@/layouts/SellerDashboardLayout';
 import MarketplaceLayout from '@/layouts/MarketplaceLayout';
 import AdminShell from '@/components/admin/AdminShell';
@@ -44,7 +45,10 @@ const router = createBrowserRouter([
       },
       {
         path: 'tin-nhan',
-        element: <SellerMessagesPage />,
+        children: [
+          { index: true, element: <SellerMessagesPage /> },
+          { path: ':conversationId', element: <ConversationThreadPage /> },
+        ],
       },
     ],
   },
@@ -66,6 +70,13 @@ const router = createBrowserRouter([
       {
         path: '/dat-hang',
         element: <CheckoutPage />,
+      },
+      {
+        path: '/tro-chuyen',
+        children: [
+          { index: true, element: <Navigate to="/" replace /> },
+          { path: ':conversationId', element: <ConversationThreadPage /> },
+        ],
       },
       {
         path: '/don-mua',
