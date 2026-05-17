@@ -166,32 +166,6 @@ export function MarketplaceNavbar() {
   return (
     <header className="sticky top-0 z-40 border-b bg-white pt-[env(safe-area-inset-top)]">
       <div className="hidden border-b bg-[#f7f7f7] text-xs md:block">
-        <div className="container flex h-9 items-center justify-between">
-          <div className="flex items-center gap-3 text-[#27272a]">
-            <span>Kênh người bán</span>
-            <span className="h-3 w-px bg-gray-300" />
-            <span>Trở thành người bán Nông Sản Tốt</span>
-            <span className="h-3 w-px bg-gray-300" />
-            <span>Tải ứng dụng</span>
-          </div>
-
-          <div className="flex items-center gap-4 text-[#27272a]">
-            <span className="inline-flex items-center gap-1"><Bell className="h-3.5 w-3.5" />Thông báo</span>
-            <span className="inline-flex items-center gap-1"><CircleHelp className="h-3.5 w-3.5" />Hỗ trợ</span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="inline-flex items-center gap-1">
-                  <Globe className="h-3.5 w-3.5" />
-                  Ngôn ngữ
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>Tiếng Việt</DropdownMenuItem>
-                <DropdownMenuItem>English</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
       </div>
 
       <div className="container flex flex-wrap items-center gap-x-4 gap-y-3 py-3 md:h-20 md:flex-nowrap md:items-center md:gap-6 md:py-0">
