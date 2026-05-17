@@ -8,6 +8,7 @@ import type {
   CheckoutResult,
   CheckoutShippingQuote,
   ConfirmOrderBody,
+  GhtkShipmentTrackingResponse,
   Order,
   OrderDetail,
 } from './types';
@@ -17,7 +18,7 @@ export const useCheckoutShippingQuoteQuery = (
   fastShipping = false,
 ) =>
   useQuery({
-    queryKey: queryKeys.orders.shippingQuote(shippingAddressId ?? '', fastShipping),
+    queryKey: queryKeys.orders.shippingQuote(shippingAddressId ?? ''),
     queryFn: async () => {
       const { data } = await apiClient.get<CheckoutShippingQuote>('/orders/checkout/quote', {
         params: {
@@ -38,17 +39,22 @@ export const useCheckoutOrderMutation = () =>
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.cart.me });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.myBuy });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.myBuyPrefix });
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders.mySell });
       void queryClient.invalidateQueries({ queryKey: queryKeys.shopDashboard });
     },
   });
 
-export const useMyBuyOrdersQuery = () =>
+export const useMyBuyOrdersQuery = (ghtkStatus?: string) =>
   useQuery({
-    queryKey: queryKeys.orders.myBuy,
+    queryKey: queryKeys.orders.myBuy(ghtkStatus),
     queryFn: async () => {
-      const { data } = await apiClient.get<Order[]>('/orders/me/buy');
+      const { data } = await apiClient.get<Order[]>('/orders/me/buy', {
+        params:
+          ghtkStatus && ghtkStatus !== 'all'
+            ? { ghtkStatus }
+            : undefined,
+      });
       return data;
     },
   });
@@ -72,6 +78,23 @@ export const useOrderDetailQuery = (orderId: string) =>
     enabled: !!orderId,
   });
 
+export const useOrderGhtkTrackingQuery = (
+  orderId: string,
+  options?: { enabled?: boolean },
+) =>
+  useQuery({
+    queryKey: queryKeys.orders.ghtkTracking(orderId),
+    queryFn: async () => {
+      const { data } = await apiClient.get<GhtkShipmentTrackingResponse>(
+        `/orders/${orderId}/shipment/tracking`,
+      );
+      return data;
+    },
+    enabled: !!orderId && (options?.enabled ?? true),
+    staleTime: 60_000,
+    retry: 1,
+  });
+
 export const useConfirmOrderMutation = (orderId: string) =>
   useMutation({
     mutationFn: async (body: ConfirmOrderBody) => {
@@ -80,7 +103,9 @@ export const useConfirmOrderMutation = (orderId: string) =>
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders.mySell });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.myBuyPrefix });
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.ghtkTracking(orderId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.shopDashboard });
     },
   });
@@ -92,7 +117,7 @@ export const useCancelOrderMutation = (orderId: string) =>
       return data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.myBuy });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.myBuyPrefix });
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders.mySell });
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.shopDashboard });
@@ -109,8 +134,9 @@ export const useBuyerConfirmNegotiationOrderMutation = (orderId: string) =>
       return data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.myBuy });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.myBuyPrefix });
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.ghtkTracking(orderId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.messaging.mine });
       void queryClient.invalidateQueries({
         predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === 'conversations',

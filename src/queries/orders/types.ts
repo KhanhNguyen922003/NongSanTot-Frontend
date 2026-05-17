@@ -45,9 +45,14 @@ export type Order = {
     | 'cancelled'
     | 'awaiting_buyer_address';
   shippingCode: string | null;
+  ghtkShipmentStatus?: number | null;
   note: string | null;
   negotiationOfferId?: string | null;
   createdAt: string | null;
+  /** Chỉ có ở danh sách đơn mua. */
+  shopName?: string | null;
+  /** Chỉ có ở danh sách đơn mua — phục vụ tìm kiếm. */
+  productNames?: string[];
 };
 
 export type OrderDetail = Order & {
@@ -93,6 +98,35 @@ export type CheckoutResult = {
   success: boolean;
   orders: Order[];
   message: string;
+};
+
+export type GhtkTrackingOrder = {
+  labelId: string | null;
+  partnerId: string | null;
+  status: string | null;
+  statusText: string | null;
+  created: string | null;
+  modified: string | null;
+  message: string | null;
+  pickDate: string | null;
+  deliverDate: string | null;
+  shipMoney: string | null;
+  insurance: string | null;
+  value: string | null;
+  weight: string | null;
+  pickMoney: number | null;
+  isFreeship: string | null;
+  customerFullname: string | null;
+  customerTel: string | null;
+  address: string | null;
+  storageDay: string | null;
+};
+
+export type GhtkShipmentTrackingResponse = {
+  success: boolean;
+  isMock?: boolean;
+  message?: string;
+  order: GhtkTrackingOrder;
 };
 
 export type CartGroup = {

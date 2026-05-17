@@ -4,8 +4,10 @@ import { Loader2 } from 'lucide-react';
 import { auth } from '../../../firebase.config';
 import AddressSelect2, { type AddressSelection } from '@/components/common/AddressSelect2';
 import { AuthFormMessage } from '@/components/auth/AuthFormMessage';
+import { OrderGhtkTrackingCard } from '@/components/orders/OrderGhtkTrackingCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatGhtkShipmentStatus } from '@/constants/ghtkStatus';
 import { getApiErrorMessage } from '@/core/api/getApiErrorMessage';
 import {
   useBuyerConfirmNegotiationOrderMutation,
@@ -72,6 +74,11 @@ const OrderDetailPage = () => {
                 Mã đơn: <span className="font-medium">{data.id}</span>
               </p>
               <p className="text-sm text-muted-foreground">Trạng thái: {data.status}</p>
+              {data.shippingCode?.trim() ? (
+                <p className="text-sm text-muted-foreground">
+                  Trạng thái vận đơn (GHTK): {formatGhtkShipmentStatus(data.ghtkShipmentStatus ?? null)}
+                </p>
+              ) : null}
 
               {awaitingAddress ? (
                 <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
@@ -101,6 +108,9 @@ const OrderDetailPage = () => {
                   <p className="text-sm text-muted-foreground">
                     Mã vận đơn: {data.shippingCode || 'Chưa có'}
                   </p>
+                  {!awaitingAddress && data.shippingCode?.trim() ? (
+                    <OrderGhtkTrackingCard orderId={data.id} shippingCode={data.shippingCode} />
+                  ) : null}
                   {data.shippingAddressSnapshot ? (
                     <div className="rounded-md border p-3 text-sm">
                       <p className="font-medium">{data.shippingAddressSnapshot.receiverName}</p>

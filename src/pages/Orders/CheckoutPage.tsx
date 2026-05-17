@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Loader2, Store } from 'lucide-react';
 import { auth } from '../../../firebase.config';
@@ -37,7 +37,15 @@ const CheckoutPage = () => {
   const isAuthenticated = !!auth.currentUser;
   const { data: cart, isLoading: isLoadingCart, isError: isCartError, error: cartError } = useMyCartQuery(isAuthenticated);
   const checkoutOrder = useCheckoutOrderMutation();
-  const quoteShipping = useCheckoutShippingQuoteQuery(selectedAddress?.id, fastShipping);
+  const { refetch: refetchShippingQuote, ...quoteShipping } = useCheckoutShippingQuoteQuery(
+    selectedAddress?.id,
+    fastShipping,
+  );
+  console.log("selectedAddress?.id", selectedAddress?.id);
+  useEffect(() => {
+    if (!selectedAddress?.id) return;
+    void refetchShippingQuote();
+  }, [fastShipping, refetchShippingQuote, selectedAddress?.id]);
 
   const groupedCartItems = useMemo(() => {
     const groups = new Map<string, GroupedCart>();

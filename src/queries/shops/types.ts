@@ -59,3 +59,36 @@ export type ShopDashboardOverview = {
   unreadBuyerMessages: number;
   revenueDeliveredLast30Days: number;
 };
+
+/** Sản phẩm trong danh sách shop detail công khai */
+export type ShopDetailProduct = {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+  coverImage: string | null;
+  averageRating?: number | null;
+  reviewCount?: number | null;
+  trustScore: number | null;
+  verifiedBadge: boolean | null;
+  categoryId: string | null;
+  categoryName: string | null;
+};
+
+/** `GET /shops/:shopId` — chi tiết cửa hàng công khai */
+export type ShopDetailResponse = {
+  shop: {
+    id: string;
+    name: string;
+    description: string | null;
+    logo: string | null;
+    displayAddress: string | null;
+    rating: number;
+    createdAt: string;
+  };
+  statistics: {
+    deliveredOrdersCount: number;
+    activeProductsCount: number;
+  };
+  products: ShopDetailProduct[];
+};

@@ -29,6 +29,7 @@ export type CreateProductBody = {
 export type Product = {
   id: string;
   shopId: string;
+  shopOwnerId?: string;
   categoryId: string | null;
   categorySlug?: string | null;
   categoryName?: string | null;

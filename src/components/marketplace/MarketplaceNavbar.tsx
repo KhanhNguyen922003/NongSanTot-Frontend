@@ -224,9 +224,11 @@ export function MarketplaceNavbar() {
                 <DropdownMenuItem asChild>
                   <Link to="/don-mua">Đơn mua</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to={sellerHubPaths.sellOrders}>Đơn bán</Link>
-                </DropdownMenuItem>
+                {user.role === 'seller' ? (
+                  <DropdownMenuItem asChild>
+                    <Link to={sellerHubPaths.sellOrders}>Đơn bán</Link>
+                  </DropdownMenuItem>
+                ) : null}
                 <div className="my-1 h-px bg-gray-200" />
                 <DropdownMenuItem onClick={() => void handleLogout()} className="text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />

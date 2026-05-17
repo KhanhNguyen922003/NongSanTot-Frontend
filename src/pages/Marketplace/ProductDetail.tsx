@@ -30,6 +30,7 @@ const ProductDetail = () => {
   const { data: product, isLoading, isError, error } = useProductDetailQuery(productId ?? '');
   const { data: products = [] } = useProductsQuery();
 
+  const isMyOwnProduct = product?.shopOwnerId && user?.id === product.shopOwnerId;
   const relatedProducts = useMemo(() => products.filter((item) => item.id !== productId).slice(0, 4), [productId, products]);
 
   const galleryImages = useMemo(() => {
@@ -195,7 +196,18 @@ const ProductDetail = () => {
                 {product.shopDisplayAddress || product.origin}
               </div>
               <p className="text-sm text-muted-foreground">
-                Nhà bán: <span className="font-medium text-[#27272a]">{product.shopName || 'Nông Sản Tốt'}</span>
+                Nhà bán:{' '}
+                <Link
+                  to={`/cua-hang/${product.shopId}`}
+                  className="font-medium text-[#27272a] hover:underline"
+                >
+                  {product.shopName || 'Nông Sản Tốt'}
+                </Link>
+                {isMyOwnProduct ? (
+                  <span className="ml-2 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                    Bạn là chủ shop
+                  </span>
+                ) : null}
               </p>
             </div>
 
@@ -243,26 +255,51 @@ const ProductDetail = () => {
               ))}
             </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
-              <Button
-                className="w-full min-w-0 sm:w-auto sm:min-w-40"
-                disabled={addCartItem.isPending || !canAddToCart}
-                onClick={() => void onAddToCart()}
-              >
-                {addCartItem.isPending ? 'Đang thêm...' : !canAddToCart ? 'Hết hàng' : 'Thêm vào giỏ'}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full min-w-0 gap-2 sm:w-auto sm:min-w-44"
-                disabled={openConversation.isPending}
-                onClick={() => void onMessageShop()}
-              >
-                <MessageCircle className="h-4 w-4 shrink-0" />
-                <span className="truncate sm:whitespace-normal">
-                  {openConversation.isPending ? 'Đang mở...' : 'Nhắn tin shop / Trả giá'}
-                </span>
-              </Button>
-            </div>
+            {isMyOwnProduct ? (
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
+                <Button
+                  className="w-full min-w-0 sm:w-auto sm:min-w-40"
+                  onClick={() => navigate(`/quan-ly/san-pham/${product.id}/chinh-sua`)}
+                >
+                  Chỉnh sửa sản phẩm
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full min-w-0 gap-2 sm:w-auto sm:min-w-44"
+                  onClick={() => navigate(`/quan-ly/san-pham/${product.id}/ton-kho`)}
+                >
+                  Quản lý tồn kho
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full min-w-0 sm:w-auto"
+                  onClick={() => navigate(`/quan-ly/don-hang?productId=${product.id}`)}
+                >
+                  Xem đơn hàng
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
+                <Button
+                  className="w-full min-w-0 sm:w-auto sm:min-w-40"
+                  disabled={addCartItem.isPending || !canAddToCart}
+                  onClick={() => void onAddToCart()}
+                >
+                  {addCartItem.isPending ? 'Đang thêm...' : !canAddToCart ? 'Hết hàng' : 'Thêm vào giỏ'}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full min-w-0 gap-2 sm:w-auto sm:min-w-44"
+                  disabled={openConversation.isPending}
+                  onClick={() => void onMessageShop()}
+                >
+                  <MessageCircle className="h-4 w-4 shrink-0" />
+                  <span className="truncate sm:whitespace-normal">
+                    {openConversation.isPending ? 'Đang mở...' : 'Nhắn tin shop / Trả giá'}
+                  </span>
+                </Button>
+              </div>
+            )}
             {addCartMessage ? (
               <div className="space-y-2">
                 <AuthFormMessage type={addCartMessage.type} text={addCartMessage.text} />

@@ -280,7 +280,7 @@ export const useCreateOrderFromOfferMutation = (conversationId: string) =>
         queryKey: queryKeys.messaging.messages(conversationId),
       });
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders.mySell });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.myBuy });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.myBuyPrefix });
       void queryClient.invalidateQueries({ queryKey: queryKeys.messaging.mine });
     },
   });
