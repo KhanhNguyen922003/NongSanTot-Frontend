@@ -13,6 +13,7 @@ export const queryKeys = {
     dashboard: ['admin', 'dashboard'] as const,
     products: (status: string) => ['admin', 'products', status] as const,
     product: (id: string) => ['admin', 'products', id] as const,
+    shops: (status: string) => ['admin', 'shops', status] as const,
   },
   products: {
     all: (filtersKey: string) => ['products', 'list', filtersKey] as const,

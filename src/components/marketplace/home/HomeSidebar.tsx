@@ -94,7 +94,7 @@ export const HomeSidebar = ({
               Dashboard admin
             </Link>
             <Link
-              to="/admin/san-pham-duyet"
+              to="/admin/products"
               className="inline-flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-[#27272a] transition hover:bg-muted"
             >
               <LayoutDashboard className="h-4 w-4 text-primary" />

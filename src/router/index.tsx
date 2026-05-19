@@ -22,10 +22,12 @@ import SellerMessagesPage from "@/pages/Dashboard/SellerMessagesPage";
 import ConversationThreadPage from "@/pages/Messaging/ConversationThreadPage";
 import SellerDashboardLayout from "@/layouts/SellerDashboardLayout";
 import MarketplaceLayout from "@/layouts/MarketplaceLayout";
-import AdminShell from "@/components/admin/AdminShell";
+import AdminLayout from "@/layouts/AdminLayout";
 import AdminDashboard from "@/pages/Admin/AdminDashboard";
+import AdminUsersPage from "@/pages/Admin/AdminUsersPage";
 import AdminProductsPage from "@/pages/Admin/AdminProductsPage";
 import AdminProductDetailPage from "@/pages/Admin/AdminProductDetailPage";
+import AdminShopsPage from "@/pages/Admin/AdminShopsPage";
 
 const router = createBrowserRouter([
   {
@@ -107,23 +109,39 @@ const router = createBrowserRouter([
         path: "/dang-tin-san-pham",
         element: <CreateNewProduct />,
       },
+    ],
+  },
+  {
+    path: '/admin',
+    element: <AdminLayout />,
+    children: [
       {
-        path: "/admin",
-        element: <AdminShell />,
-        children: [
-          {
-            index: true,
-            element: <AdminDashboard />,
-          },
-          {
-            path: "san-pham-duyet",
-            element: <AdminProductsPage />,
-          },
-          {
-            path: "san-pham-duyet/:productId",
-            element: <AdminProductDetailPage />,
-          },
-        ],
+        index: true,
+        element: <AdminDashboard />,
+      },
+      {
+        path: 'users',
+        element: <AdminUsersPage />,
+      },
+      {
+        path: 'shops',
+        element: <AdminShopsPage />,
+      },
+      {
+        path: 'products',
+        element: <AdminProductsPage />,
+      },
+      {
+        path: 'products/:productId',
+        element: <AdminProductDetailPage />,
+      },
+      {
+        path: 'san-pham-duyet',
+        element: <Navigate to="/admin/products" replace />,
+      },
+      {
+        path: 'san-pham-duyet/:productId',
+        element: <AdminProductDetailPage />,
       },
     ],
   },

@@ -31,7 +31,7 @@ export function MarketplaceFooter() {
             </div>
           </div>
           <div className="hidden md:block">
-            <h4 className="mb-3 text-sm font-semibold uppercase">Tải ứng dụng</h4>
+            {/* <h4 className="mb-3 text-sm font-semibold uppercase">Tải ứng dụng</h4> */}
             <div className="flex gap-3">
               <div className="h-20 w-20 rounded border bg-gray-100" />
               <div className="space-y-2">

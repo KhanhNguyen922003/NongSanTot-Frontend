@@ -55,11 +55,6 @@ export const productSchema = yup.object({
   pickupAddressDisplay: yup.string().trim().required("Vui lòng chọn địa chỉ lấy hàng"),
   pickupReceiverName: yup.string().trim().required("Vui lòng nhập người nhận hàng"),
   pickupReceiverPhone: yup.string().trim().required("Vui lòng nhập số điện thoại nhận hàng"),
-  preferredShippingServiceId: yup.string().when("shippingMethods", {
-    is: (methods: unknown) => Array.isArray(methods) && methods[0] === "GHTK",
-    then: (schema) => schema.trim().required("Chọn cách giao qua GHTK"),
-    otherwise: (schema) => schema.trim().optional(),
-  }),
   growthDiary: yup
     .array()
     .of(
@@ -118,7 +113,7 @@ export const unitOptions = [
 ];
 
 export const shippingOptions = [
-  { id: "GHTK", label: "Giao qua GHTK" },
+  { id: "GHTK", label: "Giao qua Giao Hàng Tiết Kiệm" },
   { id: "SELF_DELIVERY", label: "Tôi tự giao cho khách" },
 ];
 

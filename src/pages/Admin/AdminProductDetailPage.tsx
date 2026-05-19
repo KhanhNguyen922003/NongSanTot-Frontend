@@ -27,7 +27,7 @@ const AdminProductDetailPage = () => {
     try {
       await approveProduct.mutateAsync('Admin approved manually');
       setMessage({ type: 'success', text: 'Đã duyệt sản phẩm.' });
-      navigate('/admin/san-pham-duyet');
+      navigate('/admin/products');
     } catch (err) {
       setMessage({ type: 'error', text: getApiErrorMessage(err, 'Không thể duyệt sản phẩm.') });
     }
@@ -43,7 +43,7 @@ const AdminProductDetailPage = () => {
     try {
       await rejectProduct.mutateAsync(rejectReason.trim());
       setMessage({ type: 'success', text: 'Đã từ chối sản phẩm.' });
-      navigate('/admin/san-pham-duyet');
+      navigate('/admin/products');
     } catch (err) {
       setMessage({ type: 'error', text: getApiErrorMessage(err, 'Không thể từ chối sản phẩm.') });
     }
@@ -67,7 +67,7 @@ const AdminProductDetailPage = () => {
   return (
     <div className="space-y-4">
       <Button asChild variant="outline" size="sm">
-        <Link to="/admin/san-pham-duyet">
+        <Link to="/admin/products">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Quay lại danh sách
         </Link>

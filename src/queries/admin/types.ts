@@ -22,10 +22,48 @@ export type AdminDashboard = {
   totals: {
     users: number;
     shops: number;
+    activeShops: number;
+    inactiveShops: number;
+    buyers: number;
+    sellers: number;
+    admins: number;
     products: number;
     pendingProducts: number;
   };
   recentPendingProducts: AdminProductListItem[];
+};
+
+export type AdminUserRoleFilter = 'all' | 'buyer' | 'seller' | 'admin';
+
+export type AdminUserListItem = {
+  id: string;
+  firebaseUid: string | null;
+  phone: string;
+  fullName: string;
+  avatar: string | null;
+  role: 'buyer' | 'seller' | 'admin';
+  createdAt: string | null;
+  shopCount: number;
+  productCount: number;
+};
+
+export type AdminShopStatusFilter = 'all' | 'active' | 'inactive';
+
+export type AdminShopListItem = {
+  id: string;
+  name: string;
+  description: string | null;
+  displayAddress: string | null;
+  logo: string | null;
+  isActive: boolean;
+  rating: number | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  ownerId: string | null;
+  ownerName: string | null;
+  ownerPhone: string | null;
+  productCount: number;
+  activeProductCount: number;
 };
 
 export type AdminGrowthDiaryItem = {

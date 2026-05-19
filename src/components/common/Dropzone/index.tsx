@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { ImagePlus, Loader2, Trash2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,15 @@ const resolveAccept = (displayType: DropzoneUploadProps["displayType"]) => {
 
 const getFileKind = (mime: string): UploadedFile["type"] =>
   mime.startsWith("video/") ? "video" : "image";
+
+const extractClipboardFiles = (event: ClipboardEvent) => {
+  const clipboardItems = Array.from(event.clipboardData?.items ?? []);
+  console.log("Clipboard items:", event.clipboardData);
+  return clipboardItems
+    .filter((item) => item.kind === "file")
+    .map((item) => item.getAsFile())
+    .filter((file): file is File => Boolean(file));
+};
 
 const uploadToCloudinary = async (file: File) => {
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
@@ -51,6 +60,7 @@ const DropzoneUpload = ({
   const [isUploading, setIsUploading] = useState(false);
 
   const canUploadMore = files.length < maxFiles;
+  const canPasteImage = displayType !== "VIDEO";
 
   const hintText = useMemo(() => {
     if (displayType === "IMAGE") return "Chọn hình ảnh (JPG, PNG, WEBP...)";
@@ -62,6 +72,55 @@ const DropzoneUpload = ({
     setFiles(nextFiles);
     onChange(nextFiles);
   };
+
+  useEffect(() => {
+    if (!canPasteImage) return;
+
+    const handlePaste = (event: ClipboardEvent) => {
+      const activeElement = document.activeElement;
+      const isTypingTarget =
+        activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement ||
+        (activeElement instanceof HTMLElement && activeElement.isContentEditable);
+
+      if (isTypingTarget) return;
+
+      const pastedFiles = extractClipboardFiles(event).filter((file) => file.type.startsWith("image/"));
+      if (!pastedFiles.length) return;
+
+      event.preventDefault();
+      setError(null);
+
+      const remainingSlots = maxFiles - files.length;
+      if (remainingSlots <= 0) {
+        setError(`Chỉ được tối đa ${maxFiles} tệp.`);
+        return;
+      }
+
+      const filesToUpload = pastedFiles.slice(0, remainingSlots);
+      setIsUploading(true);
+
+      void (async () => {
+        try {
+          const uploaded = await Promise.all(
+            filesToUpload.map(async (file) => ({
+              url: await uploadToCloudinary(file),
+              type: getFileKind(file.type),
+            })),
+          );
+          applyFiles([...files, ...uploaded]);
+        } catch (uploadError) {
+          const message = uploadError instanceof Error ? uploadError.message : "Upload thất bại";
+          setError(message);
+        } finally {
+          setIsUploading(false);
+        }
+      })();
+    };
+
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [canPasteImage, files, maxFiles]);
 
   const onPickFiles = async (picked: FileList | null) => {
     if (!picked?.length) return;
@@ -106,6 +165,7 @@ const DropzoneUpload = ({
         <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
           {displayType === "VIDEO" ? <Video className="h-6 w-6 text-primary" /> : <ImagePlus className="h-6 w-6 text-primary" />}
           <p>{hintText}</p>
+          {canPasteImage ? <p className="text-xs text-muted-foreground">Hoặc copy ảnh rồi dán trực tiếp vào đây.</p> : null}
           {!canUploadMore ? <p>Đã đạt giới hạn {maxFiles} tệp.</p> : null}
           {isUploading ? (
             <p className="inline-flex items-center gap-2 text-primary">

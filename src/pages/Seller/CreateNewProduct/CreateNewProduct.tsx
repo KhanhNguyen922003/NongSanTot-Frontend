@@ -10,7 +10,6 @@ import ghtkLogo from "@/assets/Logo-GHTK-Slogan.webp";
 import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
 import AddressSelect2, { type AddressSelection } from "@/components/common/AddressSelect2";
 import DropzoneUpload, { type UploadedFile } from "@/components/common/Dropzone";
-import ShippingServiceSelect from "@/components/common/ShippingServiceSelect";
 import { FormInput } from "@/components/form/FormInput";
 import { FormInputCurrency } from "@/components/form/FormInputCurrency";
 import { FormSelect } from "@/components/form/FormSelect";
@@ -44,7 +43,7 @@ const CreateNewProduct = () => {
   const navigate = useNavigate();
   const [firebaseUser, setFirebaseUser] = useState<User | null | "pending">("pending");
   const [submitMessage, setSubmitMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [selectedShippingServiceId, setSelectedShippingServiceId] = useState<string>("1");
+
   const [currentStep, setCurrentStep] = useState(0);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [createdProductId, setCreatedProductId] = useState<string | null>(null);
@@ -56,7 +55,7 @@ const CreateNewProduct = () => {
 
   const form = useForm<ProductFormValues>({
     resolver: yupResolver(productSchema) as Resolver<ProductFormValues>,
-    mode: "onBlur",
+    mode: "onChange",
     defaultValues: {
       categoryId: "",
       name: "",
@@ -70,7 +69,6 @@ const CreateNewProduct = () => {
       pickupAddressDisplay: "",
       pickupReceiverName: "",
       pickupReceiverPhone: "",
-      preferredShippingServiceId: "1",
       growthDiary: [],
     },
   });
@@ -100,14 +98,7 @@ const CreateNewProduct = () => {
     setOnboardingOpen(true);
   }, [selectedShop]);
 
-  useEffect(() => {
-    if (selectedShippingMethod !== "GHTK") return;
-    const cur = form.getValues("preferredShippingServiceId");
-    if (!cur) {
-      form.setValue("preferredShippingServiceId", "1", { shouldValidate: true });
-      setSelectedShippingServiceId("1");
-    }
-  }, [selectedShippingMethod, form]);
+
 
   const updatePickupAddress = (address: AddressSelection) => {
     form.setValue("pickupAddressDisplay", address.displayAddress, { shouldValidate: true });
@@ -129,7 +120,6 @@ const CreateNewProduct = () => {
         "pickupAddressDisplay",
         "pickupReceiverName",
         "pickupReceiverPhone",
-        "preferredShippingServiceId",
       ]);
     }
     return form.trigger([
@@ -177,10 +167,6 @@ const CreateNewProduct = () => {
         receiverName: values.pickupReceiverName,
         receiverPhone: values.pickupReceiverPhone,
       },
-      preferredShippingServiceId:
-        values.shippingMethods[0] === "GHTK" && values.preferredShippingServiceId
-          ? Number(values.preferredShippingServiceId)
-          : undefined,
       isAvailable: true,
       growthDiary:
         values.growthDiary.length > 0
@@ -356,9 +342,9 @@ const CreateNewProduct = () => {
                     min={0}
                     step={allowsDecimalStock ? "0.1" : "1"}
                     error={form.formState.errors.stock?.message}
+                    subLabel={stockHelperText}
                     {...form.register("stock")}
                   />
-                  <p className="text-xs text-muted-foreground">{stockHelperText}</p>
                 </div>
 
                 <FormTextarea
@@ -504,10 +490,6 @@ const CreateNewProduct = () => {
                                 checked={checked}
                                 onChange={() => {
                                   field.onChange([method.id]);
-                                  if (method.id !== "GHTK") {
-                                    setSelectedShippingServiceId("");
-                                    form.setValue("preferredShippingServiceId", "");
-                                  }
                                 }}
                               />
                               <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
@@ -531,28 +513,6 @@ const CreateNewProduct = () => {
                 {form.formState.errors.pickupAddressDisplay ? (
                   <p className="text-xs text-red-600">{form.formState.errors.pickupAddressDisplay.message}</p>
                 ) : null}
-
-                {selectedShippingMethod === "GHTK" ? (
-                  <Controller
-                    name="preferredShippingServiceId"
-                    control={form.control}
-                    render={({ field }) => (
-                      <ShippingServiceSelect
-                        value={field.value || selectedShippingServiceId}
-                        onSelectService={(service) => {
-                          const nextValue = String(service.serviceId);
-                          setSelectedShippingServiceId(nextValue);
-                          field.onChange(nextValue);
-                        }}
-                      />
-                    )}
-                  />
-                ) : (
-                  <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-muted-foreground">
-                    Bạn chọn <span className="font-medium text-foreground">tự giao cho khách</span>. Phần chọn dịch vụ GHTK
-                    không dùng ở bước này.
-                  </div>
-                )}
 
                 <div className="rounded-lg border bg-slate-50 p-4 text-sm">
                   <p className="mb-2 font-medium text-[#27272a]">Xem nhanh trước khi đăng</p>
@@ -613,11 +573,6 @@ const CreateNewProduct = () => {
             <Button type="button" variant="outline" asChild>
               <Link to={sellerHubPaths.products}>Danh sách sản phẩm</Link>
             </Button>
-            {createdProductId ? (
-              <Button type="button" asChild>
-                <Link to={`/san-pham/${createdProductId}`}>Xem trang sản phẩm</Link>
-              </Button>
-            ) : null}
           </DialogFooter>
         </DialogContent>
       </Dialog>

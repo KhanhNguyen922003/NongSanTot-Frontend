@@ -26,14 +26,19 @@ const AdminDashboard = () => {
 
   const stats = [
     { label: 'Người dùng', value: data.totals.users, icon: Users },
+    { label: 'Buyer', value: data.totals.buyers, icon: Users },
+    { label: 'Seller', value: data.totals.sellers, icon: Users },
+    { label: 'Admin', value: data.totals.admins, icon: Users },
     { label: 'Cửa hàng', value: data.totals.shops, icon: Store },
+    { label: 'Shop đang hoạt động', value: data.totals.activeShops, icon: Store },
+    { label: 'Shop bị khóa', value: data.totals.inactiveShops, icon: Store },
     { label: 'Sản phẩm', value: data.totals.products, icon: PackageSearch },
     { label: 'Chờ duyệt', value: data.totals.pendingProducts, icon: PackageCheck },
   ];
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-9">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -54,7 +59,7 @@ const AdminDashboard = () => {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Sản phẩm mới chờ duyệt</CardTitle>
           <Button asChild variant="outline" size="sm">
-            <Link to="/admin/san-pham-duyet">
+            <Link to="/admin/products">
               Xem tất cả
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
@@ -67,7 +72,7 @@ const AdminDashboard = () => {
             data.recentPendingProducts.map((product) => (
               <Link
                 key={product.id}
-                to={`/admin/san-pham-duyet/${product.id}`}
+                to={`/admin/products/${product.id}`}
                 className="flex items-center justify-between gap-3 rounded-md border p-3 transition hover:bg-slate-50"
               >
                 <div className="flex min-w-0 items-center gap-3">
@@ -87,6 +92,23 @@ const AdminDashboard = () => {
               </Link>
             ))
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-lg">Quản lý shop</CardTitle>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/admin/shops">
+              Mở trang quản lý
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Theo dõi shop đang hoạt động, shop bị khóa và bật/tắt trạng thái khi cần can thiệp vận hành.
+          </p>
         </CardContent>
       </Card>
     </div>

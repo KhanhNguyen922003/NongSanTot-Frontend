@@ -9,6 +9,7 @@ const badgeVariants = cva('inline-flex items-center rounded-full px-2 py-0.5 tex
       success: 'bg-green-100 text-green-700',
       outline: 'border border-border text-foreground',
       secondary: 'bg-secondary text-secondary-foreground',
+      destructive: 'bg-red-100 text-red-700',
     },
   },
   defaultVariants: {

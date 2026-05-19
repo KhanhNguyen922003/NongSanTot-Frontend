@@ -3,6 +3,10 @@ import { apiClient } from '@/core/api/apiClient';
 import { queryKeys } from '@/constants/queryKeys';
 import type {
   AdminDashboard,
+  AdminUserListItem,
+  AdminUserRoleFilter,
+  AdminShopListItem,
+  AdminShopStatusFilter,
   AdminProductDetail,
   AdminProductListItem,
 } from './types';
@@ -36,6 +40,64 @@ export const useAdminProductDetailQuery = (productId: string) =>
     },
     enabled: !!productId,
   });
+
+export const useAdminUsersQuery = (role: AdminUserRoleFilter = 'all') =>
+  useQuery({
+    queryKey: ['admin', 'users', role] as const,
+    queryFn: async () => {
+      const { data } = await apiClient.get<AdminUserListItem[]>('/admin/users', {
+        params: { role },
+      });
+      return data;
+    },
+  });
+
+export const useUpdateAdminUserRoleMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: 'buyer' | 'seller' }) => {
+      const { data } = await apiClient.patch<AdminUserListItem>(`/admin/users/${userId}/role`, {
+        role,
+      });
+      return data;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard });
+    },
+  });
+};
+
+export const useAdminShopsQuery = (status: AdminShopStatusFilter = 'all') =>
+  useQuery({
+    queryKey: queryKeys.admin.shops(status),
+    queryFn: async () => {
+      const { data } = await apiClient.get<AdminShopListItem[]>('/admin/shops', {
+        params: { status },
+      });
+      return data;
+    },
+  });
+
+export const useToggleAdminShopStatusMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ shopId, isActive }: { shopId: string; isActive: boolean }) => {
+      const { data } = await apiClient.patch<AdminShopListItem>(`/admin/shops/${shopId}/status`, {
+        isActive,
+      });
+      return data;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admin.shops('all') });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admin.shops('active') });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admin.shops('inactive') });
+    },
+  });
+};
 
 export const useApproveAdminProductMutation = (productId: string) => {
   const queryClient = useQueryClient();
