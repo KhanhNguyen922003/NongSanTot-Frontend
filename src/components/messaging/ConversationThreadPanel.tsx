@@ -172,12 +172,12 @@ export const NegotiationOfferCard = (props: {
   );
 };
 
-const otherHasSeenMessage = (otherReadAt: string | null | undefined, messageCreatedAt: string | null) => {
-  if (!otherReadAt || !messageCreatedAt) return false;
-  const a = new Date(otherReadAt).getTime();
-  const b = new Date(messageCreatedAt).getTime();
-  return Number.isFinite(a) && Number.isFinite(b) && a >= b;
-};
+// const otherHasSeenMessage = (otherReadAt: string | null | undefined, messageCreatedAt: string | null) => {
+//   if (!otherReadAt || !messageCreatedAt) return false;
+//   const a = new Date(otherReadAt).getTime();
+//   const b = new Date(messageCreatedAt).getTime();
+//   return Number.isFinite(a) && Number.isFinite(b) && a >= b;
+// };
 
 export type ConversationThreadPanelProps = {
   conversationId: string;
