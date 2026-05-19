@@ -1,34 +1,5 @@
+import { fractionalUnitValues, unitOptionValues } from "@/constants/productUnit";
 import * as yup from "yup";
-
-const unitOptionValues = [
-  "kg",
-  "g",
-  "mg",
-  "tấn",
-  "tạ",
-  "yến",
-  "quả",
-  "trái",
-  "củ",
-  "bó",
-  "cây",
-  "con",
-  "miếng",
-  "khay",
-  "hộp",
-  "thùng",
-  "sọt",
-  "rổ",
-  "túi",
-  "gói",
-  "chai",
-  "lọ",
-  "lon",
-  "lốc",
-  "bao",
-  "set",
-  "chục",
-] as const;
 
 export const productSchema = yup.object({
   categoryId: yup.string().trim().required("Vui lòng chọn danh mục"),
@@ -54,7 +25,11 @@ export const productSchema = yup.object({
     .number()
     .typeError("Nhập số lượng")
     .min(0, "Số lượng không được âm")
-    .required("Vui lòng nhập số lượng"),
+    .when("unit", {
+      is: (unit: unknown) => fractionalUnitValues.includes(unit as (typeof fractionalUnitValues)[number]),
+      then: (schema) => schema.required("Vui lòng nhập số lượng").moreThan(0, "Số lượng phải lớn hơn 0"),
+      otherwise: (schema) => schema.required("Vui lòng nhập số lượng").integer("Đơn vị này chỉ nhập số nguyên"),
+    }),
   unit: yup
     .string()
     .trim()

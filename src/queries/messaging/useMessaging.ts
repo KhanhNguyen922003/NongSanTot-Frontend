@@ -158,8 +158,35 @@ export const useConversationActivitySubscription = (conversationId: string | und
               const raw = dataLine.replace(/^data:\s*/i, '').trim();
               if (!raw) continue;
               try {
-                const ev = JSON.parse(raw) as { type?: string };
+                const ev = JSON.parse(raw) as any;
                 if (ev.type === 'ping') continue;
+
+                // If server sent the created message payload, apply it directly to cache
+                if (ev.type === 'message' && ev.message) {
+                  const key = queryKeys.messaging.messages(conversationId);
+                  queryClient.setQueryData(key, (old?: ChatMessage[]) => {
+                    const exists = old?.some((m) => m.id === ev.message.id);
+                    if (old && exists) return old;
+                    return old ? [...old, ev.message] : [ev.message];
+                  });
+
+                  // update conversation detail's lastMessage/updatedAt quickly
+                  void queryClient.setQueryData(queryKeys.messaging.detail(conversationId), (old: any) => {
+                    if (!old) return old;
+                    return {
+                      ...old,
+                      conversation: {
+                        ...old.conversation,
+                        lastMessage: ev.message.content ?? old.conversation.lastMessage,
+                        updatedAt: ev.message.createdAt ?? old.conversation.updatedAt,
+                      },
+                    };
+                  });
+
+                  // also refresh convo list minimally
+                  void queryClient.invalidateQueries({ queryKey: queryKeys.messaging.mine });
+                  continue;
+                }
               } catch {
                 // vẫn refetch nếu payload không parse được
               }

@@ -97,17 +97,40 @@ const SignInForm = () => {
 
   return (
     <AuthPageChrome>
-      <Card className="w-full max-w-md rounded-lg border bg-white shadow-card">
-        <CardHeader className="space-y-1 pb-4">
-          <CardTitle className="text-xl text-[#27272a]">Đăng nhập</CardTitle>
+      <Card className="w-full overflow-hidden rounded-lg border border-primary/20 bg-white shadow-card">
+        <CardHeader className="space-y-4 border-b border-primary/10 bg-white px-6 pb-4 pt-6 sm:px-6">
+          <div className="space-y-3">
+            <div>
+              <CardTitle className="text-2xl text-[#27272a]">Đăng nhập</CardTitle>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Nhập số điện thoại và nhận OTP qua SMS. Sau khi xác thực, bạn sẽ được chuyển vào tài khoản.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-3 pt-2">
+            <div className="rounded-lg border border-primary/10 bg-primary/5 p-2.5">
+              <p className="text-xs font-medium text-muted-foreground">Bước 1</p>
+              <p className="mt-1 text-xs font-semibold text-[#27272a]">Nhập số điện thoại</p>
+            </div>
+            <div className="rounded-lg border border-primary/10 bg-primary/5 p-2.5">
+              <p className="text-xs font-medium text-muted-foreground">Bước 2</p>
+              <p className="mt-1 text-xs font-semibold text-[#27272a]">Nhận mã OTP</p>
+            </div>
+            <div className="rounded-lg border border-primary/10 bg-primary/5 p-2.5">
+              <p className="text-xs font-medium text-muted-foreground">Bước 3</p>
+              <p className="mt-1 text-xs font-semibold text-[#27272a]">Xác thực & vào chợ</p>
+            </div>
+          </div>
+
           <p className="text-sm text-muted-foreground">
-            Đăng nhập bằng mã OTP gửi qua SMS.{' '}
+            Chưa có tài khoản?{' '}
             <Link to="/dang-ky" className="font-medium text-primary underline-offset-4 hover:underline">
-              Chưa có tài khoản? Đăng ký
+              Đăng ký ngay
             </Link>
           </p>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 px-6 py-6">
           {message ? <AuthFormMessage type={message.type} text={message.text} /> : null}
 
           <form className="space-y-4" onSubmit={(e) => e.preventDefault()} noValidate>
@@ -176,7 +199,7 @@ const SignInForm = () => {
                   Đổi số điện thoại
                 </Button>
                 {countdown > 0 ? (
-                  <p className="text-center text-sm text-muted-foreground mt-2">
+                  <p className="mt-2 text-center text-sm text-muted-foreground">
                     Gửi lại mã sau {countdown}s
                   </p>
                 ) : null}

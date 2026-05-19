@@ -55,7 +55,7 @@ const ShopDetail = () => {
 
   const { shop, statistics } = data;
   const rating = Math.round(shop.rating * 10) / 10;
-  const ratingStars = Math.round(shop.rating);
+  // const ratingStars = Math.round(shop.rating);
 
   return (
     <main className="bg-slate-50 min-h-screen pb-10">

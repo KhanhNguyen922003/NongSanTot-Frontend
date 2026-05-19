@@ -63,7 +63,7 @@ export const useMySellOrdersQuery = () =>
   useQuery({
     queryKey: queryKeys.orders.mySell,
     queryFn: async () => {
-      const { data } = await apiClient.get<Order[]>('/orders/me/sell');
+      const { data } = await apiClient.get<OrderDetail[]>('/orders/me/sell');
       return data;
     },
   });

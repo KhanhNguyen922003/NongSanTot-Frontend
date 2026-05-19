@@ -1,11 +1,12 @@
-import { Link, Navigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
+import { Loader2, Package } from 'lucide-react';
 import { auth } from '../../../firebase.config';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { sellerHubPaths } from '@/constants/sellerHub';
 import { getApiErrorMessage } from '@/core/api/getApiErrorMessage';
 import { useMySellOrdersQuery } from '@/queries/orders/useOrders';
+import { OrderCard } from '@/components/orders/OrderCard';
 
 const SellOrdersPage = () => {
   const isAuthenticated = !!auth.currentUser;
@@ -21,43 +22,40 @@ const SellOrdersPage = () => {
   }
 
   return (
-    <div className="w-full">
-      <Card>
-        <CardHeader>
-          <CardTitle>Đơn bán của tôi</CardTitle>
+    <div className="w-full space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Đơn bán của tôi</h1>
+        <p className="text-muted-foreground mt-2">Quản lý và theo dõi các đơn hàng khách đã đặt.</p>
+      </div>
+
+      <Card className="border-none shadow-md">
+        <CardHeader className="bg-gray-50/50 border-b">
+          <CardTitle className="text-lg">Danh sách đơn hàng</CardTitle>
+          <CardDescription>Tất cả đơn hàng được sắp xếp theo thời gian mới nhất.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {isLoading ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Đang tải đơn bán...
+            <div className="flex flex-col items-center justify-center p-12 text-muted-foreground">
+              <Loader2 className="h-8 w-8 animate-spin mb-4 text-primary" />
+              <p>Đang tải danh sách đơn bán...</p>
             </div>
           ) : isError ? (
-            <p className="text-sm text-red-600">{getApiErrorMessage(error, 'Không thể tải đơn bán.')}</p>
+            <div className="p-6 text-center">
+              <p className="text-red-600 font-medium">{getApiErrorMessage(error, 'Không thể tải đơn bán.')}</p>
+              <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>Thử lại</Button>
+            </div>
           ) : !data?.length ? (
-            <p className="text-sm text-muted-foreground">Bạn chưa có đơn bán nào.</p>
+            <div className="flex flex-col items-center justify-center p-12 text-center">
+              <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                <Package className="h-10 w-10 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900">Chưa có đơn hàng nào</h3>
+              <p className="text-muted-foreground mt-1">Cửa hàng của bạn chưa nhận được đơn đặt hàng nào.</p>
+            </div>
           ) : (
-            <div className="space-y-3">
+            <div className="divide-y divide-gray-100">
               {data.map((order) => (
-                <div key={order.id} className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="font-medium text-[#27272a]">Đơn #{order.id.slice(0, 8)}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {order.finalPrice.toLocaleString('vi-VN')}đ · {order.status}
-                    </p>
-                  </div>
-                  {order.status === 'pending' ? (
-                    <Button asChild size="sm" className="w-full shrink-0 sm:w-auto">
-                      <Link to={`/quan-ly-don/don-mua/xac-nhan-don-hang/${order.id}`}>
-                        Xác nhận đơn
-                      </Link>
-                    </Button>
-                  ) : (
-                    <Button asChild variant="outline" size="sm" className="w-full shrink-0 sm:w-auto">
-                      <Link to={`/don-hang/${order.id}`}>Xem chi tiết</Link>
-                    </Button>
-                  )}
-                </div>
+                <OrderCard key={order.id} order={order} />
               ))}
             </div>
           )}

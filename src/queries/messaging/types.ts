@@ -39,7 +39,7 @@ export type ConversationDetail = {
     updatedAt: string | null;
   };
   role: ConversationSide;
-  shop: { id: string; name: string; ownerId: string };
+  shop: { id: string; name: string; ownerId: string; logo: string | null };
   product: {
     id: string;
     name: string;

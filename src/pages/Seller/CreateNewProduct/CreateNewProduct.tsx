@@ -35,6 +35,7 @@ import { useCategoriesQuery } from "@/queries/categories/useCategories";
 import { useCreateProductMutation } from "@/queries/products/useCreateProduct";
 import { useMyShopsQuery } from "@/queries/shops/useMyShops";
 import { ProductFormValues, productSchema, shippingOptions, unitOptions } from "./helper";
+import { fractionalUnitValues } from "@/constants/productUnit";
 
 const SIGNIN_PATH = "/dang-nhap";
 const STEP_LABELS = ["Thông tin cơ bản", "Ảnh / video", "Nhật ký (tuỳ chọn)", "Giao hàng & gửi bài"] as const;
@@ -255,6 +256,11 @@ const CreateNewProduct = () => {
   }
 
   const progress = ((currentStep + 1) / STEP_LABELS.length) * 100;
+  const selectedUnit = form.watch("unit");
+  const allowsDecimalStock = selectedUnit ? fractionalUnitValues.includes(selectedUnit as (typeof fractionalUnitValues)[number]) : false;
+  const stockHelperText = allowsDecimalStock
+    ? "Ví dụ: 2.5 kg, 0.75 tấn. Dùng số thập phân cho đơn vị khối lượng."
+    : "Ví dụ: 12 hộp, 30 quả, 5 thùng. Chỉ nhập số nguyên cho đơn vị đếm.";
 
   return (
     <div className="mx-auto w-full max-w-5xl px-3 py-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:pb-28">
@@ -345,13 +351,14 @@ const CreateNewProduct = () => {
                   />
                   <FormInput
                     id="stock"
-                    label="Số lượng đang bán"
+                    label="Tồn kho ban đầu"
                     type="number"
                     min={0}
-                    step="0.1"
+                    step={allowsDecimalStock ? "0.1" : "1"}
                     error={form.formState.errors.stock?.message}
                     {...form.register("stock")}
                   />
+                  <p className="text-xs text-muted-foreground">{stockHelperText}</p>
                 </div>
 
                 <FormTextarea

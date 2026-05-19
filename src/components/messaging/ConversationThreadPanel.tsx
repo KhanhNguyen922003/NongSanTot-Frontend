@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { getApiErrorMessage } from '@/core/api/getApiErrorMessage';
+import { PriceProposalDialog } from '@/components/messaging/PriceProposalDialog';
 import {
   useAcceptNegotiationOfferMutation,
   useConversationActivitySubscription,
@@ -19,8 +20,8 @@ import {
   useMarkConversationReadMutation,
   useSendChatMessageMutation,
 } from '@/queries/messaging/useMessaging';
-import type { ChatMessage, NegotiationOffer } from '@/queries/messaging/types';
-import useAuthStore from '@/stores/auth.store';
+import { MessageBubble } from '@/components/messaging/MessageBubble';
+import type { NegotiationOffer } from '@/queries/messaging/types';
 
 const offerStatusLabel = (o: NegotiationOffer, viewer: 'buyer' | 'seller'): string => {
   if (o.status === 'accepted') return 'Đã chốt giá';
@@ -35,7 +36,17 @@ const offerStatusLabel = (o: NegotiationOffer, viewer: 'buyer' | 'seller'): stri
   return 'Đang trao đổi';
 };
 
-const OfferBlock = (props: {
+const buildAvatarFallback = (name: string | null | undefined) => {
+  const raw = (name || 'Shop').trim();
+  if (!raw) return 'S';
+  return raw
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('');
+};
+
+export const NegotiationOfferCard = (props: {
   offer: NegotiationOffer;
   detailRole: 'buyer' | 'seller';
   conversationId: string;
@@ -45,8 +56,6 @@ const OfferBlock = (props: {
   const { offer, detailRole, conversationId, ordersByOfferId, productUnit } = props;
   const [counterOpen, setCounterOpen] = useState(false);
   const [orderOpen, setOrderOpen] = useState(false);
-  const [cPrice, setCPrice] = useState(String(offer.unitPrice));
-  const [cQty, setCQty] = useState(String(offer.quantity));
   const [orderNote, setOrderNote] = useState('');
 
   const acceptMu = useAcceptNegotiationOfferMutation(conversationId);
@@ -57,18 +66,6 @@ const OfferBlock = (props: {
   const isMyTurn =
     offer.status === 'pending' && offer.awaitingParty && offer.awaitingParty === detailRole;
   const orderId = ordersByOfferId[offer.id];
-
-  const onCounter = async () => {
-    const unitPrice = Number(cPrice.replace(/\./g, '').replace(',', '.'));
-    const quantity = Number(cQty.replace(',', '.'));
-    if (!Number.isFinite(unitPrice) || !Number.isFinite(quantity)) return;
-    await createOfferMu.mutateAsync({
-      unitPrice,
-      quantity,
-      parentOfferId: offer.id,
-    });
-    setCounterOpen(false);
-  };
 
   const onCreateOrder = async () => {
     await orderMu.mutateAsync({ offerId: offer.id, note: orderNote.trim() || undefined });
@@ -134,30 +131,22 @@ const OfferBlock = (props: {
         </p>
       ) : null}
 
-      <Dialog open={counterOpen} onOpenChange={setCounterOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Đề xuất lại</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 pt-2">
-            <div>
-              <label className="text-xs text-muted-foreground">Giá đơn vị</label>
-              <Input type="number" value={cPrice} onChange={(e) => setCPrice(e.target.value)} />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">Số lượng</label>
-              <Input type="number" value={cQty} onChange={(e) => setCQty(e.target.value)} />
-            </div>
-            <Button
-              className="w-full"
-              disabled={createOfferMu.isPending}
-              onClick={() => void onCounter()}
-            >
-              Gửi đề xuất
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <PriceProposalDialog
+        open={counterOpen}
+        onOpenChange={setCounterOpen}
+        onSubmit={async (unitPrice, quantity) => {
+          await createOfferMu.mutateAsync({
+            unitPrice,
+            quantity,
+            parentOfferId: offer.id,
+          });
+        }}
+        isLoading={createOfferMu.isPending}
+        productUnit={productUnit}
+        currentPrice={offer.unitPrice}
+        dialogTitle="Đề xuất lại giá"
+        submitLabel="Gửi đề xuất"
+      />
 
       <Dialog open={orderOpen} onOpenChange={setOrderOpen}>
         <DialogContent>
@@ -188,56 +177,6 @@ const otherHasSeenMessage = (otherReadAt: string | null | undefined, messageCrea
   const a = new Date(otherReadAt).getTime();
   const b = new Date(messageCreatedAt).getTime();
   return Number.isFinite(a) && Number.isFinite(b) && a >= b;
-};
-
-const MessageBubble = ({
-  m,
-  detailRole,
-  conversationId,
-  ordersByOfferId,
-  productUnit,
-  otherLastReadAt,
-}: {
-  m: ChatMessage;
-  detailRole: 'buyer' | 'seller';
-  conversationId: string;
-  ordersByOfferId: Record<string, string>;
-  productUnit: string;
-  otherLastReadAt: string | null | undefined;
-}) => {
-  const user = useAuthStore((s) => s.user);
-  const mine = user?.id === m.senderId;
-  const showSeen = mine && m.kind === 'text' && otherHasSeenMessage(otherLastReadAt, m.createdAt);
-  const seenByOtherLabel = detailRole === 'seller' ? 'Khách đã xem' : 'Shop đã xem';
-  if (m.kind === 'offer' && m.offer) {
-    return (
-      <div className="flex justify-center">
-        <div className="w-full max-w-md">
-          <OfferBlock
-            offer={m.offer}
-            detailRole={detailRole}
-            conversationId={conversationId}
-            ordersByOfferId={ordersByOfferId}
-            productUnit={productUnit}
-          />
-        </div>
-      </div>
-    );
-  }
-  return (
-    <div className={`flex flex-col gap-0.5 ${mine ? 'items-end' : 'items-start'}`}>
-      <div
-        className={`max-w-[85%] rounded-2xl px-3 py-2 ${
-          mine ? 'bg-primary text-primary-foreground' : 'bg-muted text-[#27272a]'
-        }`}
-      >
-        <p className="whitespace-pre-wrap text-sm">{m.content}</p>
-      </div>
-      {showSeen ? (
-        <span className="pr-1 text-[10px] text-muted-foreground">{seenByOtherLabel}</span>
-      ) : null}
-    </div>
-  );
 };
 
 export type ConversationThreadPanelProps = {
@@ -275,8 +214,6 @@ export function ConversationThreadPanel({
 
   const [text, setText] = useState('');
   const [offerOpen, setOfferOpen] = useState(false);
-  const [oPrice, setOPrice] = useState('');
-  const [oQty, setOQty] = useState('1');
   const [toast, setToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const createOfferMu = useCreateNegotiationOfferMutation(conversationId);
@@ -352,24 +289,6 @@ export function ConversationThreadPanel({
     }
   };
 
-  const handlePropose = async () => {
-    const unitPrice = Number(oPrice.replace(/\./g, '').replace(',', '.'));
-    const quantity = Number(oQty.replace(',', '.'));
-    if (!Number.isFinite(unitPrice) || !Number.isFinite(quantity)) {
-      setToast({ type: 'error', text: 'Nhập giá và số lượng hợp lệ.' });
-      return;
-    }
-    setToast(null);
-    try {
-      await createOfferMu.mutateAsync({ unitPrice, quantity });
-      setOfferOpen(false);
-      setOPrice('');
-      setOQty('1');
-    } catch (e) {
-      setToast({ type: 'error', text: getApiErrorMessage(e, 'Không gửi được đề xuất.') });
-    }
-  };
-
   if (detailQuery.isLoading || messagesQuery.isLoading) {
     if (variant === 'dock') {
       return (
@@ -413,6 +332,8 @@ export function ConversationThreadPanel({
   const headerSubtitle =
     dockSubtitle ??
     (detail.role === 'buyer' ? 'Chat với shop' : 'Chat với người mua');
+  const shopAvatar = detail.shop.logo;
+  const shopAvatarFallback = buildAvatarFallback(detail.shop.name);
 
   const threadBody = (
     <>
@@ -422,7 +343,7 @@ export function ConversationThreadPanel({
             {detail.product.coverImage ? (
               <img
                 src={detail.product.coverImage}
-                alt=""
+                alt={detail.product.name}
                 className="h-16 w-16 rounded-md border object-cover"
               />
             ) : (
@@ -446,10 +367,23 @@ export function ConversationThreadPanel({
 
       {variant === 'dock' && detail.product ? (
         <div className="shrink-0 border-b bg-muted/30 px-3 py-2 text-xs">
-          <p className="truncate font-medium text-[#27272a]">{detail.product.name}</p>
-          <Link to={`/san-pham/${detail.product.id}`} className="text-primary hover:underline">
-            Xem sản phẩm
-          </Link>
+          <div className="flex items-center gap-2">
+            {detail.product.coverImage ? (
+              <img
+                src={detail.product.coverImage}
+                alt={detail.product.name}
+                className="h-10 w-10 rounded border object-cover"
+              />
+            ) : (
+              <div className="h-10 w-10 rounded border bg-muted" />
+            )}
+            <div className="min-w-0">
+              <p className="truncate font-medium text-[#27272a]">{detail.product.name}</p>
+              <Link to={`/san-pham/${detail.product.id}`} className="text-primary hover:underline">
+                Xem sản phẩm
+              </Link>
+            </div>
+          </div>
         </div>
       ) : null}
 
@@ -531,30 +465,23 @@ export function ConversationThreadPanel({
         </CardContent>
       </Card>
 
-      <Dialog open={offerOpen} onOpenChange={setOfferOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Đề xuất giá &amp; số lượng</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 pt-2">
-            <div>
-              <label className="text-xs text-muted-foreground">Giá đơn vị mong muốn</label>
-              <Input type="number" value={oPrice} onChange={(e) => setOPrice(e.target.value)} />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">Số lượng ({productUnit})</label>
-              <Input type="number" value={oQty} onChange={(e) => setOQty(e.target.value)} />
-            </div>
-            <Button
-              className="w-full"
-              disabled={createOfferMu.isPending}
-              onClick={() => void handlePropose()}
-            >
-              Gửi vào chat
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <PriceProposalDialog
+        open={offerOpen}
+        onOpenChange={setOfferOpen}
+        onSubmit={async (unitPrice, quantity) => {
+          try {
+            await createOfferMu.mutateAsync({ unitPrice, quantity });
+            setToast({ type: 'success', text: 'Đã gửi đề xuất!' });
+          } catch (e) {
+            throw new Error(getApiErrorMessage(e, 'Không gửi được đề xuất.'));
+          }
+        }}
+        isLoading={createOfferMu.isPending}
+        productUnit={productUnit}
+        currentPrice={detail?.product?.price}
+        dialogTitle="Đề xuất giá & số lượng"
+        submitLabel="Gửi vào chat"
+      />
     </>
   );
 
@@ -562,12 +489,23 @@ export function ConversationThreadPanel({
     return (
       <div className="flex h-full min-h-0 flex-1 flex-col bg-white">
         <div className="flex shrink-0 items-center justify-between gap-2 border-b bg-[#0a7d42] px-2 py-2 text-white">
-          <div className="min-w-0 flex-1 px-1">
-            <p className="truncate text-sm font-semibold">{headerTitle}</p>
-            <p className="truncate text-[11px] text-white/85">
-              {headerSubtitle}
-              {myLastReadLabel ? ` · Bạn xem lúc ${myLastReadLabel}` : ''}
-            </p>
+          <div className="flex min-w-0 flex-1 items-center gap-2 px-1">
+            <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-white/35 bg-white/20">
+              {shopAvatar ? (
+                <img src={shopAvatar} alt={detail.shop.name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-white">
+                  {shopAvatarFallback}
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{headerTitle}</p>
+              <p className="truncate text-[11px] text-white/85">
+                {headerSubtitle}
+                {myLastReadLabel ? ` · Bạn xem lúc ${myLastReadLabel}` : ''}
+              </p>
+            </div>
           </div>
           <div className="flex shrink-0 items-center gap-0.5">
             {expandHref ? (
@@ -622,7 +560,16 @@ export function ConversationThreadPanel({
             <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>
-        <div>
+        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border bg-muted">
+          {shopAvatar ? (
+            <img src={shopAvatar} alt={detail.shop.name} className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-muted-foreground">
+              {shopAvatarFallback}
+            </div>
+          )}
+        </div>
+        <div className="min-w-0">
           <h1 className="text-lg font-semibold text-[#27272a]">{headerTitle}</h1>
           <p className="text-xs text-muted-foreground">{headerSubtitle}</p>
           {myLastReadLabel ? (

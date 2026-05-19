@@ -1,4 +1,4 @@
-import { Bell, CircleHelp, Globe, Loader2, LogIn, MessageCircle, Search, ShoppingCart, UserPlus, LogOut, User } from 'lucide-react';
+import { Loader2, LogIn, MessageCircle, Search, ShoppingCart, UserPlus, LogOut, User } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { signOut } from 'firebase/auth';

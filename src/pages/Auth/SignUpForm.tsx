@@ -139,20 +139,47 @@ const SignUpForm = () => {
 
   return (
     <AuthPageChrome>
-      <Card className="w-full max-w-md rounded-lg border bg-white shadow-card">
-        <CardHeader className="space-y-1 pb-4">
-          <CardTitle className="text-xl text-[#27272a]">Đăng ký</CardTitle>
+      <Card className="w-full overflow-hidden rounded-lg border border-primary/20 bg-white shadow-card">
+        <CardHeader className="space-y-4 border-b border-primary/10 bg-white px-6 pb-4 pt-6 sm:px-6">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-secondary">
+              <span className="h-2 w-2 rounded-full bg-secondary" />
+              Tạo tài khoản mới
+            </div>
+            <div>
+              <CardTitle className="text-2xl text-[#27272a]">Đăng ký</CardTitle>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Điền tên và số điện thoại, rồi xác thực qua OTP để mở tài khoản trong vài giây.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-3 pt-2">
+            <div className="rounded-lg border border-primary/10 bg-primary/5 p-2.5">
+              <p className="text-xs font-medium text-muted-foreground">Bước 1</p>
+              <p className="mt-1 text-xs font-semibold text-[#27272a]">Nhập thông tin</p>
+            </div>
+            <div className="rounded-lg border border-primary/10 bg-primary/5 p-2.5">
+              <p className="text-xs font-medium text-muted-foreground">Bước 2</p>
+              <p className="mt-1 text-xs font-semibold text-[#27272a]">Nhận OTP qua SMS</p>
+            </div>
+            <div className="rounded-lg border border-primary/10 bg-primary/5 p-2.5">
+              <p className="text-xs font-medium text-muted-foreground">Bước 3</p>
+              <p className="mt-1 text-xs font-semibold text-[#27272a]">Xác nhận & bắt đầu</p>
+            </div>
+          </div>
+
           <p className="text-sm text-muted-foreground">
-            Tạo tài khoản bằng số điện thoại và mã OTP (Firebase).{" "}
+            Đã có tài khoản?{' '}
             <Link
               to="/dang-nhap"
               className="font-medium text-primary underline-offset-4 hover:underline"
             >
-              Đã có tài khoản? Đăng nhập
+              Đăng nhập ngay
             </Link>
           </p>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 px-6 py-6">
           {message ? (
             <AuthFormMessage type={message.type} text={message.text} />
           ) : null}
@@ -251,7 +278,7 @@ const SignUpForm = () => {
                   Sửa lại thông tin đăng ký
                 </Button>
                 {countdown > 0 ? (
-                  <p className="text-center text-sm text-muted-foreground mt-2">
+                  <p className="mt-2 text-center text-sm text-muted-foreground">
                     Gửi lại mã sau {countdown}s
                   </p>
                 ) : null}
