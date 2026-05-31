@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Tag } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { NegotiationOffer } from '@/queries/messaging/types';
 import {
   useAcceptNegotiationOfferMutation,
@@ -11,6 +11,8 @@ import {
   useDeclineNegotiationOfferMutation,
   useCreateOrderFromOfferMutation,
 } from '@/queries/messaging/useMessaging';
+import { fractionalUnitValues } from '@/constants/productUnit';
+import { formatCurrencyInput, normalizeCurrencyInput } from '@/components/messaging/currency';
 
 interface OfferBlockProps {
   offer: NegotiationOffer;
@@ -19,6 +21,45 @@ interface OfferBlockProps {
   ordersByOfferId: Record<string, string>;
   productUnit: string;
 }
+
+const isFractionalUnit = (unit: string): boolean => {
+  return fractionalUnitValues.includes(unit as typeof fractionalUnitValues[number]);
+};
+
+const MIN_QUANTITY_BY_UNIT: Record<string, number> = {
+  g: 150,
+  mg: 150000,
+  kg: 0.15,
+  'tấn': 0.00015,
+  'tạ': 0.0015,
+  'yến': 0.015,
+};
+
+const validateQuantity = (
+  quantity: number,
+  unit: string,
+): { valid: boolean; warning?: string } => {
+  const minThreshold = MIN_QUANTITY_BY_UNIT[unit];
+
+  if (isFractionalUnit(unit)) {
+    if (minThreshold && quantity < minThreshold) {
+      return {
+        valid: false,
+        warning: `Số lượng quá ít. Tối thiểu: ${minThreshold} ${unit}`,
+      };
+    }
+    return { valid: true };
+  }
+
+  if (!Number.isInteger(quantity) || quantity <= 0) {
+    return {
+      valid: false,
+      warning: `${unit} phải là số nguyên dương`,
+    };
+  }
+
+  return { valid: true };
+};
 
 const offerStatusLabel = (o: NegotiationOffer, viewer: 'buyer' | 'seller'): string => {
   if (o.status === 'accepted') return 'Đã chốt giá';
@@ -40,6 +81,7 @@ export const OfferBlock = (props: OfferBlockProps) => {
   const [cPrice, setCPrice] = useState(String(offer.unitPrice));
   const [cQty, setCQty] = useState(String(offer.quantity));
   const [orderNote, setOrderNote] = useState('');
+  const [counterError, setCounterError] = useState<string | null>(null);
 
   const acceptMu = useAcceptNegotiationOfferMutation(conversationId);
   const declineMu = useDeclineNegotiationOfferMutation(conversationId);
@@ -49,12 +91,30 @@ export const OfferBlock = (props: OfferBlockProps) => {
   const isMyTurn =
     offer.status === 'pending' && offer.awaitingParty && offer.awaitingParty === detailRole;
   const orderId = ordersByOfferId[offer.id];
+  const parsedUnitPrice = useMemo(() => {
+    const parsed = Number(cPrice);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }, [cPrice]);
+  const parsedQuantity = useMemo(() => {
+    const parsed = Number(cQty.replace(',', '.'));
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }, [cQty]);
+  const quantityValidation = useMemo(() => {
+    if (!parsedQuantity) return { valid: false, warning: 'Số lượng không hợp lệ' };
+    return validateQuantity(parsedQuantity, productUnit);
+  }, [parsedQuantity, productUnit]);
+  const isCounterValid = !!parsedUnitPrice && !!parsedQuantity && quantityValidation.valid;
 
   const onCounter = async () => {
-    const unitPrice = Number(cPrice.replace(/\./g, '').replace(',', '.'));
-    const quantity = Number(cQty.replace(',', '.'));
-    if (!Number.isFinite(unitPrice) || !Number.isFinite(quantity)) return;
-    await createOfferMu.mutateAsync({ unitPrice, quantity, parentOfferId: offer.id });
+    if (!isCounterValid) {
+      setCounterError(quantityValidation.warning || 'Vui lòng nhập giá và số lượng hợp lệ');
+      return;
+    }
+    await createOfferMu.mutateAsync({
+      unitPrice: parsedUnitPrice!,
+      quantity: parsedQuantity!,
+      parentOfferId: offer.id,
+    });
     setCounterOpen(false);
   };
 
@@ -115,12 +175,39 @@ export const OfferBlock = (props: OfferBlockProps) => {
           <div className="space-y-3 pt-2">
             <div>
               <label className="text-xs text-muted-foreground">Giá đơn vị</label>
-              <Input type="number" value={cPrice} onChange={e => setCPrice(e.target.value)} />
+              <Input
+                type="text"
+                inputMode="numeric"
+                value={formatCurrencyInput(cPrice)}
+                onChange={(e) => {
+                  setCPrice(normalizeCurrencyInput(e.target.value));
+                  setCounterError(null);
+                }}
+                placeholder="Nhập giá (vd: 50000)"
+              />
             </div>
             <div>
               <label className="text-xs text-muted-foreground">Số lượng</label>
-              <Input type="number" value={cQty} onChange={e => setCQty(e.target.value)} />
+              <Input
+                type="text"
+                inputMode={isFractionalUnit(productUnit) ? 'decimal' : 'numeric'}
+                value={cQty}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (!isFractionalUnit(productUnit)) {
+                    setCQty(value.replace(/[^\d]/g, ''));
+                  } else {
+                    setCQty(value.replace(/[^\d.]/g, ''));
+                  }
+                  setCounterError(null);
+                }}
+                placeholder={isFractionalUnit(productUnit) ? 'vd: 10 hoặc 10.5' : 'vd: 10'}
+              />
+              {quantityValidation.warning ? (
+                <p className="mt-1 text-xs text-amber-600">{quantityValidation.warning}</p>
+              ) : null}
             </div>
+            {counterError ? <p className="text-xs text-red-600">{counterError}</p> : null}
             <Button className="w-full" disabled={createOfferMu.isPending} onClick={() => void onCounter()}>
               Gửi đề xuất
             </Button>

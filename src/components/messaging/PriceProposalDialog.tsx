@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { fractionalUnitValues } from '@/constants/productUnit';
+import { formatCurrencyInput, normalizeCurrencyInput } from '@/components/messaging/currency';
 
 interface PriceProposalDialogProps {
   open: boolean;
@@ -15,29 +16,6 @@ interface PriceProposalDialogProps {
   dialogTitle?: string;
   submitLabel?: string;
 }
-
-const formatPriceInput = (value: string): string => {
-  // Remove non-digit characters except decimal
-  const cleaned = value.replace(/[^\d.]/g, '');
-  const parts = cleaned.split('.');
-  
-  if (parts.length > 2) {
-    return formatPriceInput(parts.slice(0, 2).join('.'));
-  }
-  
-  // Format integer part with thousand separators
-  const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  
-  if (parts.length === 2) {
-    return `${integerPart},${parts[1].substring(0, 2)}`;
-  }
-  
-  return integerPart;
-};
-
-const parsePriceInput = (value: string): number => {
-  return Number(value.replace(/\./g, '').replace(',', '.'));
-};
 
 // Check if a unit is fractional (can have decimal values)
 const isFractionalUnit = (unit: string): boolean => {
@@ -140,7 +118,8 @@ export function PriceProposalDialog({
 
   const parsedPrice = useMemo(() => {
     if (!priceInput) return null;
-    return parsePriceInput(priceInput);
+    const parsed = Number(priceInput);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
   }, [priceInput]);
 
   const parsedQuantity = useMemo(() => {
@@ -175,12 +154,8 @@ export function PriceProposalDialog({
     quantityValidation.valid;
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value === '') {
-      setPriceInput('');
-    } else {
-      setPriceInput(formatPriceInput(value));
-    }
+    const value = normalizeCurrencyInput(e.target.value);
+    setPriceInput(value);
     setError(null);
   };
 
@@ -250,8 +225,8 @@ export function PriceProposalDialog({
             <Input
               type="text"
               inputMode="numeric"
-              placeholder="Nhập giá (vd: 50.000)"
-              value={priceInput}
+              placeholder="Nhập giá (vd: 50000)"
+              value={formatCurrencyInput(priceInput)}
               onChange={handlePriceChange}
               disabled={isLoading}
               className="text-sm"

@@ -83,8 +83,14 @@ const SignInForm = () => {
       queryFn: fetchAuthMe,
     });
     useAuthStore.getState().setUser(authMeData.user);
+    console.log("🚀 ~ file: SignInForm.tsx:122 ~ onVerifyOtp ~ authMeData:", authMeData);
     setOk('Đăng nhập thành công.');
-    navigate(authMeData.user.role === 'admin' ? ADMIN_DASHBOARD_PATH : nextPath, { replace: true });
+    const dest = authMeData.user.role === 'admin'
+      ? ADMIN_DASHBOARD_PATH
+      : authMeData.user.role === 'seller'
+      ? '/thong-ke-cua-hang'
+      : nextPath;
+    navigate(dest, { replace: true });
   };
 
   const onChangePhone = () => {
@@ -97,7 +103,7 @@ const SignInForm = () => {
 
   return (
     <AuthPageChrome>
-      <Card className="w-full overflow-hidden rounded-lg border border-primary/20 bg-white shadow-card">
+      <Card className="w-full overflow-hidden rounded-lg border bg-white shadow-card">
         <CardHeader className="space-y-4 border-b border-primary/10 bg-white px-6 pb-4 pt-6 sm:px-6">
           <div className="space-y-3">
             <div>

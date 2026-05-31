@@ -139,7 +139,7 @@ const SignUpForm = () => {
 
   return (
     <AuthPageChrome>
-      <Card className="w-full overflow-hidden rounded-lg border border-primary/20 bg-white shadow-card">
+      <Card className="w-full overflow-hidden rounded-lg border bg-white shadow-card">
         <CardHeader className="space-y-4 border-b border-primary/10 bg-white px-6 pb-4 pt-6 sm:px-6">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-secondary">

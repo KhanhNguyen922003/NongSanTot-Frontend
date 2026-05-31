@@ -23,6 +23,8 @@ import ConversationThreadPage from "@/pages/Messaging/ConversationThreadPage";
 import SellerDashboardLayout from "@/layouts/SellerDashboardLayout";
 import MarketplaceLayout from "@/layouts/MarketplaceLayout";
 import AdminLayout from "@/layouts/AdminLayout";
+import ProtectedRoute from '@/router/ProtectedRoute';
+import RedirectIfAuthenticated from '@/router/RedirectIfAuthenticated';
 import AdminDashboard from "@/pages/Admin/AdminDashboard";
 import AdminUsersPage from "@/pages/Admin/AdminUsersPage";
 import AdminProductsPage from "@/pages/Admin/AdminProductsPage";
@@ -36,7 +38,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/thong-ke-cua-hang",
-    element: <SellerDashboardLayout />,
+    element: (
+      <ProtectedRoute allowedRoles={["seller"]}>
+        <SellerDashboardLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
@@ -99,7 +105,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/quan-ly-don/don-mua/xac-nhan-don-hang/:orderId",
-        element: <SellerConfirmOrderPage />,
+        element: (
+          <ProtectedRoute allowedRoles={["seller"]}>
+            <SellerConfirmOrderPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/dang-ky-ban-hang",
@@ -107,13 +117,21 @@ const router = createBrowserRouter([
       },
       {
         path: "/dang-tin-san-pham",
-        element: <CreateNewProduct />,
+        element: (
+          <ProtectedRoute allowedRoles={["seller"]}>
+            <CreateNewProduct />
+          </ProtectedRoute>
+        ),
       },
     ],
   },
   {
     path: '/admin',
-    element: <AdminLayout />,
+    element: (
+      <ProtectedRoute allowedRoles={["admin"]}>
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
@@ -147,11 +165,19 @@ const router = createBrowserRouter([
   },
   {
     path: "/dang-ky",
-    element: <SignUpForm />,
+    element: (
+      <RedirectIfAuthenticated>
+        <SignUpForm />
+      </RedirectIfAuthenticated>
+    ),
   },
   {
     path: "/dang-nhap",
-    element: <SignInForm />,
+    element: (
+      <RedirectIfAuthenticated>
+        <SignInForm />
+      </RedirectIfAuthenticated>
+    ),
   },
 ]);
 
