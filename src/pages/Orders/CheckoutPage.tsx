@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Loader2, Store } from 'lucide-react';
-import { auth } from '../../../firebase.config';
 import { AuthFormMessage } from '@/components/auth/AuthFormMessage';
 import AddressSelect2, { type AddressSelection } from '@/components/common/AddressSelect2';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { marketplacePaths } from '@/constants/routes';
 import { getApiErrorMessage } from '@/core/api/getApiErrorMessage';
 import { useMyCartQuery } from '@/queries/carts/useCarts';
 import {
   useCheckoutOrderMutation,
   useCheckoutShippingQuoteQuery,
 } from '@/queries/orders/useOrders';
+import useAuthStore from '@/stores/auth.store';
 
 type GroupedCart = {
   shopId: string;
@@ -34,7 +35,7 @@ const CheckoutPage = () => {
   const [note, setNote] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const isAuthenticated = !!auth.currentUser;
+  const isAuthenticated = !!useAuthStore((state) => state.user);
   const { data: cart, isLoading: isLoadingCart, isError: isCartError, error: cartError } = useMyCartQuery(isAuthenticated);
   const checkoutOrder = useCheckoutOrderMutation();
   const { refetch: refetchShippingQuote, ...quoteShipping } = useCheckoutShippingQuoteQuery(
@@ -97,7 +98,7 @@ const CheckoutPage = () => {
         fastShipping,
       });
       setMessage({ type: 'success', text: result.message });
-      navigate('/don-mua');
+      navigate(marketplacePaths.buyOrders);
     } catch (error) {
       setMessage({
         type: 'error',
@@ -107,7 +108,7 @@ const CheckoutPage = () => {
   };
 
   if (!isAuthenticated) {
-    return <Navigate to={`/dang-nhap?next=${encodeURIComponent('/dat-hang')}`} replace />;
+    return <Navigate to={`/dang-nhap?next=${encodeURIComponent(marketplacePaths.checkout)}`} replace />;
   }
 
   if (isLoadingCart) {

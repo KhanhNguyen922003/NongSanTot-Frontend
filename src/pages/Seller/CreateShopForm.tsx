@@ -18,11 +18,17 @@ import {
   validateShopLogoFile,
 } from "@/lib/firebase/shopLogoStorage";
 import { shopSchema, type ShopFormValues } from "@/lib/auth/authSchemas";
+import { authPaths } from "@/constants/routes";
+import { sellerHubPaths } from "@/constants/sellerHub";
+import { queryKeys } from "@/constants/queryKeys";
+import { queryClient } from "@/queries";
+import { fetchAuthMe } from "@/queries/Auth/useAuth";
 import { useCreateShopMutation } from "@/queries/shops/useCreateShop";
 import { useMyShopsQuery } from "@/queries/shops/useMyShops";
 import type { VietnamAdministrativeSelection } from "@/queries/VietNamProvinceAPI";
+import useAuthStore from "@/stores/auth.store";
 
-const SELLER_REGISTER_PATH = "/seller/register";
+const SELLER_REGISTER_PATH = sellerHubPaths.shopSettings;
 
 const CreateShopForm = () => {
   const navigate = useNavigate();
@@ -45,6 +51,7 @@ const CreateShopForm = () => {
     error: myShopsErr,
   } = useMyShopsQuery(canQueryShops);
   const createShop = useCreateShopMutation();
+  const setUser = useAuthStore((state) => state.setUser);
 
   const form = useForm<ShopFormValues>({
     resolver: yupResolver(shopSchema) as Resolver<ShopFormValues>,
@@ -68,7 +75,7 @@ const CreateShopForm = () => {
     const unsub = onAuthStateChanged(auth, (user) => {
       setFirebaseUser(user);
       if (!user) {
-        navigate(`/signin?next=${encodeURIComponent(SELLER_REGISTER_PATH)}`, {
+        navigate(`${authPaths.signIn}?next=${encodeURIComponent(SELLER_REGISTER_PATH)}`, {
           replace: true,
         });
       }
@@ -101,7 +108,14 @@ const CreateShopForm = () => {
         ward: addressSelection?.ward?.name,
         detail: addressSelection?.detail.trim() || undefined,
       });
-      navigate("/thong-ke-cua-hang");
+
+      const authMeData = await queryClient.fetchQuery({
+        queryKey: queryKeys.authMe,
+        queryFn: fetchAuthMe,
+      });
+      setUser(authMeData.user);
+
+      navigate(sellerHubPaths.overview);
     } catch (err) {
       const message = getApiErrorMessage(err);
       const fallbackMessage =
@@ -223,7 +237,7 @@ const CreateShopForm = () => {
           <CardContent className="space-y-3">
             <Button
               className="w-full"
-              onClick={() => void navigate("/thong-ke-cua-hang")}
+              onClick={() => void navigate(sellerHubPaths.overview)}
             >
               Vào bảng điều khiển
             </Button>

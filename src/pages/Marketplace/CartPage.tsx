@@ -1,18 +1,19 @@
 import { useMemo } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { Loader2, Minus, Plus, Trash2 } from 'lucide-react';
-import { auth } from '../../../firebase.config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { marketplacePaths } from '@/constants/routes';
 import { getApiErrorMessage } from '@/core/api/getApiErrorMessage';
 import {
   useMyCartQuery,
   useRemoveCartItemMutation,
   useUpdateCartItemMutation,
 } from '@/queries/carts/useCarts';
+import useAuthStore from '@/stores/auth.store';
 
 const CartPage = () => {
-  const isAuthenticated = !!auth.currentUser;
+  const isAuthenticated = !!useAuthStore((state) => state.user);
   const { data, isLoading, isError, error } = useMyCartQuery(isAuthenticated);
   const updateCartItem = useUpdateCartItemMutation();
   const removeCartItem = useRemoveCartItemMutation();
@@ -49,7 +50,7 @@ const CartPage = () => {
   }, 0);
 
   if (!isAuthenticated) {
-    return <Navigate to={`/dang-nhap?next=${encodeURIComponent('/gio-hang')}`} replace />;
+    return <Navigate to={`/dang-nhap?next=${encodeURIComponent(marketplacePaths.cart)}`} replace />;
   }
 
   if (isLoading) {

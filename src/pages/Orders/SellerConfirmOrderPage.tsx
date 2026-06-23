@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { auth } from '../../../firebase.config';
 import { AuthFormMessage } from '@/components/auth/AuthFormMessage';
 import AddressSelect2, { type AddressSelection } from '@/components/common/AddressSelect2';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { authPaths } from '@/constants/routes';
 import { getApiErrorMessage } from '@/core/api/getApiErrorMessage';
 import {
   useConfirmOrderMutation,
@@ -24,9 +24,9 @@ const SellerConfirmOrderPage = () => {
   const { data: order, isLoading, isError, error } = useOrderDetailQuery(orderId);
   const confirmOrder = useConfirmOrderMutation(orderId);
 
-  const isAuthenticated = !!auth.currentUser;
+  const isAuthenticated = !!useAuthStore((state) => state.user);
   if (!isAuthenticated) {
-    return <Navigate to={`/dang-nhap?next=${encodeURIComponent(`/quan-ly-don/don-mua/xac-nhan-don-hang/${orderId}`)}`} replace />;
+    return <Navigate to={`${authPaths.signIn}?next=${encodeURIComponent(`/quan-ly-don/don-mua/xac-nhan-don-hang/${orderId}`)}`} replace />;
   }
 
   const handleConfirm = async () => {

@@ -9,6 +9,8 @@ import { AuthPageChrome } from '@/components/auth/AuthPageChrome';
 import { FormInput } from '@/components/form/FormInput';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { authPaths } from '@/constants/routes';
+import { sellerHubPaths } from '@/constants/sellerHub';
 import { usePhoneOtpAuth } from '@/hooks/usePhoneOtpAuth';
 import { signInOtpSchema, smsOtpCodeSchema, type SignInOtpFormValues } from '@/lib/auth/authSchemas';
 import { getRecaptchaWidgetSize, isRecaptchaVisible } from '@/lib/auth/recaptcha';
@@ -18,12 +20,11 @@ import { fetchAuthMe } from '@/queries/Auth/useAuth';
 import useAuthStore from '@/stores/auth.store';
 
 const RECAPTCHA_CONTAINER_ID = 'recaptcha-signin';
-const ADMIN_DASHBOARD_PATH = '/admin';
 
 const SignInForm = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const nextPath = searchParams.get('next') || '/';
+  const nextPath = searchParams.get('next');
 
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [countdown, setCountdown] = useState(0);
@@ -85,11 +86,10 @@ const SignInForm = () => {
     useAuthStore.getState().setUser(authMeData.user);
     console.log("🚀 ~ file: SignInForm.tsx:122 ~ onVerifyOtp ~ authMeData:", authMeData);
     setOk('Đăng nhập thành công.');
+    const safeNextPath = nextPath && nextPath !== authPaths.signIn ? nextPath : null;
     const dest = authMeData.user.role === 'admin'
-      ? ADMIN_DASHBOARD_PATH
-      : authMeData.user.role === 'seller'
-      ? '/thong-ke-cua-hang'
-      : nextPath;
+      ? authPaths.adminDashboard
+      : safeNextPath ?? (authMeData.user.role === 'seller' ? sellerHubPaths.overview : '/');
     navigate(dest, { replace: true });
   };
 

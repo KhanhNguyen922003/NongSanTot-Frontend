@@ -1,13 +1,13 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { auth } from '../../../firebase.config';
 import AddressSelect2, { type AddressSelection } from '@/components/common/AddressSelect2';
 import ShippingServiceSelect from '@/components/common/ShippingServiceSelect';
 import { AuthFormMessage } from '@/components/auth/AuthFormMessage';
 import { OrderGhtkTrackingCard } from '@/components/orders/OrderGhtkTrackingCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { authPaths, marketplacePaths } from '@/constants/routes';
 import { formatGhtkShipmentStatus } from '@/constants/ghtkStatus';
 import { getApiErrorMessage } from '@/core/api/getApiErrorMessage';
 import {
@@ -15,10 +15,11 @@ import {
   useCancelOrderMutation,
   useOrderDetailQuery,
 } from '@/queries/orders/useOrders';
+import useAuthStore from '@/stores/auth.store';
 
 const OrderDetailPage = () => {
   const { orderId = '' } = useParams();
-  const isAuthenticated = !!auth.currentUser;
+  const isAuthenticated = !!useAuthStore((state) => state.user);
   const { data, isLoading, isError, error } = useOrderDetailQuery(orderId);
   const cancelOrder = useCancelOrderMutation(orderId);
   const confirmNegotiation = useBuyerConfirmNegotiationOrderMutation(orderId);
@@ -27,7 +28,7 @@ const OrderDetailPage = () => {
   const [confirmMsg, setConfirmMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   if (!isAuthenticated) {
-    return <Navigate to={`/dang-nhap?next=${encodeURIComponent(`/don-hang/${orderId}`)}`} replace />;
+    return <Navigate to={`${authPaths.signIn}?next=${encodeURIComponent(marketplacePaths.orderDetail(orderId))}`} replace />;
   }
 
   const awaitingAddress = data?.negotiationAwaitingBuyerAddress === true;
@@ -160,7 +161,7 @@ const OrderDetailPage = () => {
               </div>
               <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
                 <Button asChild variant="outline" className="w-full sm:w-auto">
-                  <Link to="/don-mua">Quay lại đơn mua</Link>
+                  <Link to={marketplacePaths.buyOrders}>Quay lại đơn mua</Link>
                 </Button>
                 <Button
                   variant="outline"

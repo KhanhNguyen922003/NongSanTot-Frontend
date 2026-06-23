@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, PackagePlus, Pencil, Trash2 } from "lucide-react";
 import { AppTable, type AppTableColumn } from "@/components/common/AppTable";
 import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
@@ -85,6 +85,9 @@ const productToForm = (p: Product): EditFormState => ({
 });
 
 const SellerProductsPage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data: items = [], isLoading, isError, error, refetch } = useSellerProductsQuery();
   const updateProduct = useUpdateSellerProductMutation();
   const archiveProduct = useArchiveSellerProductMutation();
@@ -95,6 +98,7 @@ const SellerProductsPage = () => {
   const [baselineImages, setBaselineImages] = useState("");
   const [baselineVideos, setBaselineVideos] = useState("");
   const [dialogError, setDialogError] = useState<string | null>(null);
+  const editProductId = searchParams.get('edit');
 
   useEffect(() => {
     if (!editOpen) {
@@ -110,6 +114,14 @@ const SellerProductsPage = () => {
     }
   }, [editOpen, editing]);
 
+  useEffect(() => {
+    if (!editProductId || editOpen) return;
+    const target = items.find((item) => item.id === editProductId);
+    if (target) {
+      openEdit(target);
+    }
+  }, [editOpen, editProductId, items]);
+
   const openEdit = (row: Product) => {
     if (row.status === "archived") return;
     setEditing(row);
@@ -120,6 +132,12 @@ const SellerProductsPage = () => {
   const closeEdit = () => {
     setEditOpen(false);
     setEditing(null);
+    if (searchParams.has('edit') || searchParams.has('focus')) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('edit');
+      next.delete('focus');
+      void navigate({ pathname: location.pathname, search: next.toString() ? `?${next.toString()}` : '' }, { replace: true });
+    }
   };
 
   const handleSave = async () => {

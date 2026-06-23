@@ -1,15 +1,15 @@
 import { Link, Navigate } from "react-router-dom";
 import { Loader2, MessageCircle } from "lucide-react";
-import { auth } from "../../../firebase.config";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { sellerHubPaths } from "@/constants/sellerHub";
 import { getApiErrorMessage } from "@/core/api/getApiErrorMessage";
 import { useMyConversationsQuery } from "@/queries/messaging/useMessaging";
 import { useMessengerDockStore } from "@/stores/messengerDock.store";
+import useAuthStore from "@/stores/auth.store";
 
 const SellerMessagesPage = () => {
-  const isAuthenticated = !!auth.currentUser;
+  const isAuthenticated = !!useAuthStore((state) => state.user);
   const q = useMyConversationsQuery(isAuthenticated);
   const openMessengerEntry = useMessengerDockStore((s) => s.openEntry);
 

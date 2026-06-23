@@ -30,6 +30,7 @@ import AdminUsersPage from "@/pages/Admin/AdminUsersPage";
 import AdminProductsPage from "@/pages/Admin/AdminProductsPage";
 import AdminProductDetailPage from "@/pages/Admin/AdminProductDetailPage";
 import AdminShopsPage from "@/pages/Admin/AdminShopsPage";
+import AdminReviewDemoPage from "@/pages/Admin/AdminReviewDemoPage";
 
 const router = createBrowserRouter([
   {
@@ -152,6 +153,10 @@ const router = createBrowserRouter([
       {
         path: 'products/:productId',
         element: <AdminProductDetailPage />,
+      },
+      {
+        path: 'reviews-demo',
+        element: <AdminReviewDemoPage />,
       },
       {
         path: 'san-pham-duyet',

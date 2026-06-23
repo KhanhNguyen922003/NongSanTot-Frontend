@@ -3,13 +3,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AuthFormMessage } from '@/components/auth/AuthFormMessage';
 import { ProductCard } from '@/components/marketplace/ProductCard';
+import { FormTextarea } from '@/components/form/FormTextarea';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { sellerProductPaths } from '@/constants/routes';
 import { getApiErrorMessage } from '@/core/api/getApiErrorMessage';
 import { useAddCartItemMutation } from '@/queries/carts/useCarts';
 import { useOpenProductConversationMutation } from '@/queries/messaging/useMessaging';
 import { useProductDetailQuery, useProductsQuery } from '@/queries/products/useProducts';
+import { useCreateMyReviewMutation, useMyReviewEligibilityQuery, useProductReviewsQuery } from '@/queries/reviews/useReviews';
 import useAuthStore from '@/stores/auth.store';
 import { useMessengerDockStore } from '@/stores/messengerDock.store';
 
@@ -26,9 +29,14 @@ const ProductDetail = () => {
   const openMessengerEntry = useMessengerDockStore((s) => s.openEntry);
   const addCartItem = useAddCartItemMutation();
   const openConversation = useOpenProductConversationMutation();
+  const createReview = useCreateMyReviewMutation();
   const [addCartMessage, setAddCartMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
   const { data: product, isLoading, isError, error } = useProductDetailQuery(productId ?? '');
   const { data: products = [] } = useProductsQuery();
+  const { data: reviewData } = useProductReviewsQuery(productId ?? '');
+  const { data: reviewEligibility } = useMyReviewEligibilityQuery(productId ?? '', !!user);
 
   const isMyOwnProduct = product?.shopOwnerId && user?.id === product.shopOwnerId;
   const relatedProducts = useMemo(() => products.filter((item) => item.id !== productId).slice(0, 4), [productId, products]);
@@ -81,7 +89,33 @@ const ProductDetail = () => {
   const canAddToCart = product.stock > 0;
   const rating = product.averageRating ?? 0;
   const reviewCount = product.reviewCount ?? 0;
-  const starCount = reviewCount > 0 ? Math.round(rating) : 0;
+  const reviewSummary = reviewData?.summary;
+  const reviewItems = reviewData?.items ?? [];
+  const effectiveAverageRating = reviewSummary?.averageRating ?? rating;
+  const effectiveReviewCount = reviewSummary?.reviewCount ?? reviewCount;
+  const canWriteReview = !!user && !!reviewEligibility?.canReview;
+
+  const submitReview = async () => {
+    if (!user) {
+      navigate(`/dang-nhap?next=${encodeURIComponent(`/san-pham/${product.id}`)}`);
+      return;
+    }
+    try {
+      await createReview.mutateAsync({
+        productId: product.id,
+        rating: reviewRating,
+        comment: reviewComment.trim() || undefined,
+      });
+      setAddCartMessage({ type: 'success', text: 'Đã gửi review thành công.' });
+      setReviewComment('');
+      setReviewRating(5);
+    } catch (reviewError) {
+      setAddCartMessage({
+        type: 'error',
+        text: getApiErrorMessage(reviewError, 'Không thể gửi review.'),
+      });
+    }
+  };
   const onAddToCart = async () => {
     setAddCartMessage(null);
     if (!user) {
@@ -227,12 +261,14 @@ const ProductDetail = () => {
             </div>
 
             <div className="flex items-center gap-1 text-secondary">
-              {starCount > 0 ? (
+              {effectiveReviewCount > 0 ? (
                 <>
-                  {Array.from({ length: starCount }).map((_, idx) => (
+                  {Array.from({ length: Math.round(effectiveAverageRating) }).map((_, idx) => (
                     <Star key={idx} className="h-4 w-4 fill-current" />
                   ))}
-                  <span className="ml-1 text-sm text-muted-foreground">({reviewCount} đánh giá)</span>
+                  <span className="ml-1 text-sm text-muted-foreground">
+                    ({effectiveReviewCount} đánh giá · {effectiveAverageRating.toFixed(1)}/5)
+                  </span>
                 </>
               ) : (
                 <span className="text-sm text-muted-foreground">Chưa có đánh giá</span>
@@ -259,21 +295,21 @@ const ProductDetail = () => {
               <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
                 <Button
                   className="w-full min-w-0 sm:w-auto sm:min-w-40"
-                  onClick={() => navigate(`/quan-ly/san-pham/${product.id}/chinh-sua`)}
+                  onClick={() => navigate(sellerProductPaths.edit(product.id))}
                 >
                   Chỉnh sửa sản phẩm
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full min-w-0 gap-2 sm:w-auto sm:min-w-44"
-                  onClick={() => navigate(`/quan-ly/san-pham/${product.id}/ton-kho`)}
+                  onClick={() => navigate(sellerProductPaths.stock(product.id))}
                 >
                   Quản lý tồn kho
                 </Button>
                 <Button
                   variant="ghost"
                   className="w-full min-w-0 sm:w-auto"
-                  onClick={() => navigate(`/quan-ly/don-hang?productId=${product.id}`)}
+                  onClick={() => navigate(sellerProductPaths.orders(product.id))}
                 >
                   Xem đơn hàng
                 </Button>
@@ -312,6 +348,97 @@ const ProductDetail = () => {
                 ) : null}
               </div>
             ) : null}
+
+            <Card className="rounded-lg border bg-white shadow-card">
+              <CardHeader>
+                <CardTitle className="text-lg text-primary">Đánh giá sản phẩm</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 rounded-lg border bg-slate-50 p-4 sm:grid-cols-[180px_1fr] sm:items-center">
+                  <div>
+                    <p className="text-3xl font-semibold text-primary">{effectiveAverageRating.toFixed(1)}</p>
+                    <p className="text-sm text-muted-foreground">{effectiveReviewCount} đánh giá</p>
+                  </div>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    {([5, 4, 3, 2, 1] as const).map((score) => {
+                      const count = reviewSummary?.ratingCounts?.[score] ?? 0;
+                      const percent = effectiveReviewCount ? (count / effectiveReviewCount) * 100 : 0;
+                      return (
+                        <div key={score} className="flex items-center gap-2">
+                          <span className="w-6">{score}★</span>
+                          <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
+                            <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
+                          </div>
+                          <span className="w-8 text-right">{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {canWriteReview ? (
+                  <div className="space-y-3 rounded-lg border p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-[#27272a]">Viết review của bạn</p>
+                      <Badge variant="outline">Chỉ đơn delivered mới được phép</Badge>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {([5, 4, 3, 2, 1] as const).map((score) => (
+                        <Button
+                          key={score}
+                          type="button"
+                          variant={reviewRating === score ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setReviewRating(score)}
+                        >
+                          {score}★
+                        </Button>
+                      ))}
+                    </div>
+                    <FormTextarea
+                      id="product-review-comment"
+                      label="Nội dung"
+                      rows={4}
+                      placeholder="Bạn thấy sản phẩm thế nào?"
+                      value={reviewComment}
+                      onChange={(event) => setReviewComment(event.target.value)}
+                    />
+                    <Button type="button" onClick={() => void submitReview()} disabled={createReview.isPending}>
+                      {createReview.isPending ? 'Đang gửi...' : 'Gửi review'}
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {reviewEligibility?.reason || 'Bạn cần đăng nhập và có đơn delivered để viết review.'}
+                  </p>
+                )}
+
+                <div className="space-y-3">
+                  {reviewItems.length ? (
+                    reviewItems.map((item) => (
+                      <div key={item.id} className="rounded-lg border p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-medium text-[#27272a]">{item.reviewerName || 'Người mua ẩn danh'}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : 'Chưa rõ ngày'}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1 text-amber-500">
+                            {Array.from({ length: item.rating }).map((_, index) => (
+                              <Star key={index} className="h-4 w-4 fill-current" />
+                            ))}
+                          </div>
+                        </div>
+                        {item.comment ? <p className="mt-3 whitespace-pre-line text-sm text-[#27272a]">{item.comment}</p> : null}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Sản phẩm chưa có review nào.</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </CardContent>
       </Card>

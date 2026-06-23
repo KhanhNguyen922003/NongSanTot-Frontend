@@ -1,15 +1,15 @@
 import { Navigate } from 'react-router-dom';
 import { Loader2, Package } from 'lucide-react';
-import { auth } from '../../../firebase.config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { sellerHubPaths } from '@/constants/sellerHub';
 import { getApiErrorMessage } from '@/core/api/getApiErrorMessage';
 import { useMySellOrdersQuery } from '@/queries/orders/useOrders';
 import { OrderCard } from '@/components/orders/OrderCard';
+import useAuthStore from '@/stores/auth.store';
 
 const SellOrdersPage = () => {
-  const isAuthenticated = !!auth.currentUser;
+  const isAuthenticated = !!useAuthStore((state) => state.user);
   const { data, isLoading, isError, error } = useMySellOrdersQuery();
 
   if (!isAuthenticated) {

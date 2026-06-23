@@ -1,0 +1,28 @@
+# Dependencies and build output
+node_modules/
+dist/
+dist-ssr/
+coverage/
+.vite/
+
+# Logs and runtime artifacts
+logs/
+*.log
+*.pid
+*.pid.lock
+
+# Local environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.local
+
+# Tooling caches
+*.tsbuildinfo
+
+# OS and editor noise
+.DS_Store
+.idea/
+.vscode/

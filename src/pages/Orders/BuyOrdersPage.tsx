@@ -1,13 +1,13 @@
 import { Link, Navigate } from 'react-router-dom';
 import { BarChart3, CalendarClock, Loader2, PackageSearch, Search, ShoppingBag, Truck } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { auth } from '../../../firebase.config';
 import {
   BUY_ORDERS_GHTK_TAB_ORDER,
   formatGhtkShipmentStatus,
   GHTK_STATUS_LABELS,
 } from '@/constants/ghtkStatus';
 import { sellerHubPaths } from '@/constants/sellerHub';
+import { marketplacePaths } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -65,13 +65,13 @@ const getTabLabel = (tab: string) => {
 };
 
 const BuyOrdersPage = () => {
-  const isAuthenticated = !!auth.currentUser;
+  const isAuthenticated = !!useAuthStore((state) => state.user);
   const { user } = useAuthStore();
   const [tab, setTab] = useState<string>('all');
   const [search, setSearch] = useState('');
 
   if (!isAuthenticated) {
-    return <Navigate to={`/dang-nhap?next=${encodeURIComponent('/don-mua')}`} replace />;
+    return <Navigate to={`/dang-nhap?next=${encodeURIComponent(marketplacePaths.buyOrders)}`} replace />;
   }
 
   // Sellers should access sell orders dashboard, not buy orders

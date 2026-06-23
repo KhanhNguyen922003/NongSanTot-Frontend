@@ -20,6 +20,10 @@ export const queryKeys = {
     detail: (id: string) => ['products', id] as const,
     sellerList: ['products', 'me', 'list'] as const,
   },
+  reviews: {
+    byProduct: (id: string) => ['reviews', 'product', id] as const,
+    eligibility: (id: string) => ['reviews', 'eligibility', id] as const,
+  },
   cart: {
     me: ['carts', 'me'] as const,
   },

@@ -91,7 +91,6 @@ const CreateNewProduct = () => {
   }, [navigate]);
 
   const selectedShop = useMemo(() => myShops || null, [myShops]);
-  const selectedShippingMethod = form.watch("shippingMethods")?.[0];
 
   useEffect(() => {
     if (!selectedShop || hasSeenSellerCreateProductOnboarding()) return;
@@ -249,7 +248,7 @@ const CreateNewProduct = () => {
     : "Ví dụ: 12 hộp, 30 quả, 5 thùng. Chỉ nhập số nguyên cho đơn vị đếm.";
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-3 py-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:pb-28">
+    <div className="mx-auto w-full max-w-5xl px-3 py-6 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:pb-40">
       <Card className="rounded-lg border bg-white shadow-card">
         <CardHeader className="space-y-3">
           <CardTitle className="text-2xl text-[#27272a]">Đăng sản phẩm mới</CardTitle>
