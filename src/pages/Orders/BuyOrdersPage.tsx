@@ -107,41 +107,39 @@ const BuyOrdersPage = () => {
   };
 
   return (
-    <main className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-amber-50/40 px-3 py-4 sm:px-4 sm:py-6">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.16),transparent_45%),radial-gradient(circle_at_top_right,rgba(14,165,233,0.12),transparent_35%)]" />
-
-      <div className="relative mx-auto w-full max-w-6xl space-y-6">
-        <Card className="border-orange-100/80 bg-white/90 shadow-sm backdrop-blur">
-          <CardContent className="space-y-6 p-5 sm:p-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <main className="container space-y-4 px-3 py-4 sm:space-y-6 sm:px-4 sm:py-6">
+      <div className="space-y-4">
+        <Card className="rounded-lg shadow-card">
+          <CardContent className="space-y-5 p-4 sm:p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-xs font-medium text-orange-700">
+                <div className="inline-flex items-center gap-2 rounded-full border bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700">
                   <ShoppingBag className="h-3.5 w-3.5" />
                   Đơn mua của tôi
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:min-w-[28rem]">
-                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Tổng đơn</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">{stats.total}</p>
+              <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4 lg:max-w-[34rem]">
+                <div className="rounded-lg border bg-white px-4 py-3 shadow-sm">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Tổng đơn</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">{stats.total}</p>
                 </div>
-                <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
-                  <p className="text-xs uppercase tracking-wide text-sky-600">Đang hiển thị</p>
-                  <p className="mt-1 text-2xl font-semibold text-sky-900">{stats.visible}</p>
+                <div className="rounded-lg border bg-white px-4 py-3 shadow-sm">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Đang hiển thị</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">{stats.visible}</p>
                 </div>
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-                  <p className="text-xs uppercase tracking-wide text-emerald-600">Đã giao</p>
-                  <p className="mt-1 text-2xl font-semibold text-emerald-900">{stats.delivered}</p>
+                <div className="rounded-lg border bg-white px-4 py-3 shadow-sm">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Đã giao</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">{stats.delivered}</p>
                 </div>
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-                  <p className="text-xs uppercase tracking-wide text-amber-600">Đang giao</p>
-                  <p className="mt-1 text-2xl font-semibold text-amber-900">{stats.shipping}</p>
+                <div className="rounded-lg border bg-white px-4 py-3 shadow-sm">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Đang giao</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">{stats.shipping}</p>
                 </div>
               </div>
             </div>
 
-            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div className="space-y-3">
               <div className="space-y-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -158,16 +156,16 @@ const BuyOrdersPage = () => {
                 </p>
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+              <div className="w-full rounded-lg border bg-white p-1 shadow-sm">
                 <div className="flex max-w-full gap-1 overflow-x-auto">
                   <button
                     type="button"
                     onClick={() => setTabSafe('all')}
                     className={cn(
-                      'shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                      'shrink-0 rounded-md px-4 py-2 text-sm font-medium transition-colors',
                       tab === 'all'
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:bg-slate-100 hover:text-foreground',
                     )}
                   >
                     Tất cả
@@ -176,10 +174,10 @@ const BuyOrdersPage = () => {
                     type="button"
                     onClick={() => setTabSafe('none')}
                     className={cn(
-                      'shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                      'shrink-0 rounded-md px-4 py-2 text-sm font-medium transition-colors',
                       tab === 'none'
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:bg-slate-100 hover:text-foreground',
                     )}
                   >
                     Chưa đồng bộ GHTK
@@ -192,10 +190,10 @@ const BuyOrdersPage = () => {
                         type="button"
                         onClick={() => setTabSafe(value)}
                         className={cn(
-                          'max-w-[220px] shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                          'max-w-[220px] shrink-0 rounded-md px-4 py-2 text-sm font-medium transition-colors',
                           tab === value
-                            ? 'bg-slate-900 text-white shadow-sm'
-                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'text-muted-foreground hover:bg-slate-100 hover:text-foreground',
                         )}
                         title={GHTK_STATUS_LABELS[st]}
                       >
@@ -209,51 +207,51 @@ const BuyOrdersPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white/90 shadow-sm backdrop-blur">
-          <CardHeader className="border-b border-slate-100 pb-4">
+        <Card className="rounded-lg shadow-card">
+          <CardHeader className="border-b pb-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <CardTitle className="text-lg text-slate-900">Danh sách đơn</CardTitle>
-                <p className="mt-1 text-sm text-slate-500">
+                <CardTitle className="text-lg text-foreground">Danh sách đơn</CardTitle>
+                <p className="mt-1 text-sm text-muted-foreground">
                   {tab === 'all' ? 'Tất cả đơn hàng bạn đã đặt' : 'Đơn hàng đang lọc theo trạng thái'}
                 </p>
               </div>
-              <div className="hidden items-center gap-2 rounded-full bg-slate-50 px-3 py-2 text-xs text-slate-600 sm:flex">
+              <div className="hidden items-center gap-2 rounded-full bg-muted px-3 py-2 text-xs text-muted-foreground sm:flex">
                 <BarChart3 className="h-4 w-4" />
                 {stats.visible} kết quả
               </div>
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-4 p-5 sm:p-6">
+          <CardContent className="space-y-4 p-4 sm:p-5">
             {isLoading ? (
-              <div className="flex items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-600">
+              <div className="flex items-center gap-2 rounded-lg border border-dashed bg-muted/30 px-4 py-5 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Đang tải đơn mua...
               </div>
             ) : isError ? (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700">
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700">
                 {getApiErrorMessage(error, 'Không thể tải đơn mua.')}
               </div>
             ) : !data?.length ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-12 text-center">
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted/30 px-6 py-12 text-center">
                 <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
-                  <PackageSearch className="h-6 w-6 text-slate-500" />
+                  <PackageSearch className="h-6 w-6 text-muted-foreground" />
                 </div>
-                <p className="text-base font-medium text-slate-900">
+                <p className="text-base font-medium text-foreground">
                   {tab === 'all' ? 'Bạn chưa có đơn hàng nào.' : 'Không có đơn ở trạng thái này.'}
                 </p>
-                <p className="mt-2 max-w-md text-sm text-slate-500">
+                <p className="mt-2 max-w-md text-sm text-muted-foreground">
                   Khi có đơn mới, chúng sẽ xuất hiện ở đây để bạn theo dõi trạng thái giao hàng.
                 </p>
               </div>
             ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-12 text-center">
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted/30 px-6 py-12 text-center">
                 <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
-                  <Search className="h-6 w-6 text-slate-500" />
+                  <Search className="h-6 w-6 text-muted-foreground" />
                 </div>
-                <p className="text-base font-medium text-slate-900">Không có đơn khớp từ khóa tìm kiếm.</p>
-                <p className="mt-2 max-w-md text-sm text-slate-500">
+                <p className="text-base font-medium text-foreground">Không có đơn khớp từ khóa tìm kiếm.</p>
+                <p className="mt-2 max-w-md text-sm text-muted-foreground">
                   Thử tìm bằng mã đơn ngắn, tên shop hoặc xóa bớt ký tự trong ô tìm kiếm.
                 </p>
               </div>
@@ -267,7 +265,7 @@ const BuyOrdersPage = () => {
                   return (
                     <div
                       key={order.id}
-                      className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                      className="rounded-lg border bg-white p-4 shadow-sm transition hover:shadow-md"
                     >
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div className="min-w-0 space-y-3">
@@ -281,30 +279,30 @@ const BuyOrdersPage = () => {
                             <span
                               className={cn(
                                 'rounded-full border px-2.5 py-1 text-xs font-medium',
-                                orderStatusClass[order.status] ?? 'border-slate-200 bg-slate-50 text-slate-700',
+                                orderStatusClass[order.status] ?? 'border-border bg-muted text-foreground',
                               )}
                             >
                               {orderStatusLabel[order.status] ?? order.status}
                             </span>
-                            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600">
+                            <span className="rounded-full border bg-white px-2.5 py-1 text-xs font-medium text-muted-foreground">
                               GHTK: {ghtkText}
                             </span>
                           </div>
 
-                          <div className="grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+                          <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
                             <div className="flex items-center gap-2">
-                              <Truck className="h-4 w-4 text-slate-400" />
+                              <Truck className="h-4 w-4 text-muted-foreground" />
                               <span>{formatMoney(order.finalPrice)}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <CalendarClock className="h-4 w-4 text-slate-400" />
+                              <CalendarClock className="h-4 w-4 text-muted-foreground" />
                               <span>{createdAtText ?? 'Chưa có thời gian tạo'}</span>
                             </div>
                           </div>
 
                           {productPreview ? (
-                            <p className="line-clamp-2 text-sm text-slate-500">
-                              <span className="font-medium text-slate-700">Sản phẩm:</span> {productPreview}
+                            <p className="line-clamp-2 text-sm text-muted-foreground">
+                              <span className="font-medium text-foreground">Sản phẩm:</span> {productPreview}
                             </p>
                           ) : null}
                         </div>

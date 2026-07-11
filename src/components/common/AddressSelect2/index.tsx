@@ -50,6 +50,15 @@ const emptyForm: AddressFormState = {
   displayAddress: "",
 };
 
+const ADDRESS_LABEL_OPTIONS = [
+  "Nhà",
+  "Văn phòng",
+  "Kho",
+  "Vườn",
+  "Cửa hàng",
+  "Khác",
+];
+
 const buildDisplayAddress = (address: Pick<Address, "detail" | "ward" | "province">) =>
   [address.detail, address.ward, address.province].filter(Boolean).join(", ");
 
@@ -296,11 +305,18 @@ const AddressSelect2 = ({ onChange, isShowTitle = true, userId: userIdProp }: Ad
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-medium text-[#27272a]">Nhãn địa chỉ</label>
-              <Input
+              <select
                 value={formState.label}
                 onChange={(event) => setFormState((prev) => ({ ...prev, label: event.target.value }))}
-                placeholder="Ví dụ: Vườn nhà, kho lấy hàng..."
-              />
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="">Chọn nhãn địa chỉ</option>
+                {ADDRESS_LABEL_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
             </div>
             <div />
             <div className="space-y-2">

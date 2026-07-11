@@ -2,7 +2,7 @@ import axios from 'axios';
 import { auth } from '../../../firebase.config';
 
 export const normalizeApiBaseUrl = (raw?: string) => {
-  const fallback = 'http://localhost:3000';
+  const fallback = 'http://192.168.2.7:8080';
   const base = (raw || fallback).trim().replace(/\/+$/, '');
   return base.endsWith('/api') ? base.slice(0, -4) : base;
 };
