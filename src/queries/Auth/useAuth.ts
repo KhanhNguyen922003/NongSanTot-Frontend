@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../../firebase.config';
 import { apiClient } from '@/core/api/apiClient';
@@ -21,10 +21,10 @@ export const fetchPhoneExists = async (phone: string): Promise<boolean> => {
   return !!(response.data.data ?? response.data)?.exists;
 };
 
-export const useAuthMeQuery = (enabled = true) =>
+export const useAuthMeQuery = (enabled = true): UseQueryResult<AuthMeResponse, Error> =>
   useQuery({
     queryKey: queryKeys.authMe,
-    queryFn: fetchAuthMe,
+    queryFn: () => fetchAuthMe(),
     enabled: enabled && !!auth.currentUser,
     staleTime: 60_000,
     retry: (count, err: any) => err?.response?.status !== 401 && count < 2,

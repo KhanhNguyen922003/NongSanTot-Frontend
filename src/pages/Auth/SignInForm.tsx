@@ -81,7 +81,7 @@ const SignInForm = () => {
     }
     const authMeData = await queryClient.fetchQuery({
       queryKey: queryKeys.authMe,
-      queryFn: fetchAuthMe,
+      queryFn: () => fetchAuthMe(),
     });
     useAuthStore.getState().setUser(authMeData.user);
     console.log("🚀 ~ file: SignInForm.tsx:122 ~ onVerifyOtp ~ authMeData:", authMeData);

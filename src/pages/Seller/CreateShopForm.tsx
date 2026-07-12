@@ -111,7 +111,7 @@ const CreateShopForm = () => {
 
       const authMeData = await queryClient.fetchQuery({
         queryKey: queryKeys.authMe,
-        queryFn: fetchAuthMe,
+        queryFn: () => fetchAuthMe(),
       });
       setUser(authMeData.user);
 
