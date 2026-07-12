@@ -6,9 +6,19 @@ import { queryKeys } from '@/constants/queryKeys';
 import { queryClient } from '../index';
 import { AuthMeResponse } from './types';
 
-export const fetchAuthMe = async (): Promise<AuthMeResponse> => {
-  const response = await apiClient.get('/auth/me');
+export const fetchAuthMe = async (flow?: 'signup' | 'signin'): Promise<AuthMeResponse> => {
+  const response = await apiClient.get('/auth/me', {
+    params: flow ? { flow } : undefined,
+  });
   return response.data.data ?? response.data;
+};
+
+export const fetchPhoneExists = async (phone: string): Promise<boolean> => {
+  const response = await apiClient.get('/auth/phone-exists', {
+    params: { phone },
+  });
+
+  return !!(response.data.data ?? response.data)?.exists;
 };
 
 export const useAuthMeQuery = (enabled = true) =>

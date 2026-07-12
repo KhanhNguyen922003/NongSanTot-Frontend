@@ -20,7 +20,7 @@ import {
 import { getRecaptchaWidgetSize, isRecaptchaVisible } from "@/lib/auth/recaptcha";
 import { queryKeys } from "@/constants/queryKeys";
 import { queryClient } from "@/queries";
-import { fetchAuthMe } from "@/queries/Auth/useAuth";
+import { fetchAuthMe, fetchPhoneExists } from "@/queries/Auth/useAuth";
 import useAuthStore from "@/stores/auth.store";
 
 const RECAPTCHA_CONTAINER_ID = "recaptcha-signup";
@@ -73,6 +73,16 @@ const SignUpForm = () => {
     setMessage(null);
     setValue("otp", "");
     resetOtpSession();
+
+    const phoneExists = await fetchPhoneExists(values.phone);
+    if (phoneExists) {
+      setError("phone", {
+        type: "manual",
+        message: "Số điện thoại này đã được đăng ký. Vui lòng đăng nhập.",
+      });
+      return;
+    }
+
     if (needsCaptchaCheck && !captchaVerified) {
       setErr("Vui lòng hoàn tất reCAPTCHA trước khi gửi OTP.");
       return;
@@ -122,7 +132,7 @@ const SignUpForm = () => {
 
     const authMeData = await queryClient.fetchQuery({
       queryKey: queryKeys.authMe,
-      queryFn: fetchAuthMe,
+      queryFn: () => fetchAuthMe('signup'),
     });
     useAuthStore.getState().setUser(authMeData.user);
     setOk("Đăng ký thành công.");

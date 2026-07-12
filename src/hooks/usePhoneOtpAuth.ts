@@ -8,6 +8,43 @@ type SendOtpResult = { ok: true } | { ok: false; message: string };
 
 type ConfirmOtpResult = { ok: true } | { ok: false; message: string };
 
+type FirebaseLikeError = {
+  code?: string;
+  message?: string;
+};
+
+const PHONE_OTP_THROTTLED_MESSAGE = 'Bạn đã yêu cầu OTP quá nhiều lần. Vui lòng chờ vài phút rồi thử lại.';
+
+function getPhoneOtpErrorMessage(error: unknown, fallback: string): string {
+  const firebaseError = error as FirebaseLikeError;
+  const code = firebaseError?.code ?? '';
+  const message = firebaseError?.message ?? '';
+
+  if (
+    code === 'auth/too-many-requests' ||
+    code === 'auth/quota-exceeded' ||
+    message.includes('Error code: 39') ||
+    message.includes('backendError') ||
+    message.includes('"code":39')
+  ) {
+    return PHONE_OTP_THROTTLED_MESSAGE;
+  }
+
+  if (code === 'auth/invalid-app-credential' || code === 'auth/captcha-check-failed') {
+    return 'reCAPTCHA chưa hợp lệ. Vui lòng tải lại trang và thử lại.';
+  }
+
+  if (code === 'auth/invalid-phone-number') {
+    return 'Số điện thoại không hợp lệ.';
+  }
+
+  if (code === 'auth/invalid-verification-code') {
+    return 'Mã OTP không hợp lệ. Vui lòng kiểm tra lại.';
+  }
+
+  return fallback;
+}
+
 /**
  * Gửi / xác thực OTP đăng nhập Firebase Phone Auth + reCAPTCHA (normal hoặc invisible theo env).
  */
@@ -73,8 +110,11 @@ export function usePhoneOtpAuth(recaptchaContainerId: string) {
         setCaptchaVerified(false);
         return { ok: true };
       } catch (e) {
-        const err = e as Error;
-        return { ok: false, message: err.message || 'Không gửi được mã OTP.' };
+        setCaptchaVerified(false);
+        return {
+          ok: false,
+          message: getPhoneOtpErrorMessage(e, 'Không gửi được mã OTP.'),
+        };
       } finally {
         setSending(false);
       }
@@ -96,8 +136,10 @@ export function usePhoneOtpAuth(recaptchaContainerId: string) {
         await confirmationResult.confirm(otp);
         return { ok: true };
       } catch (e) {
-        const err = e as Error;
-        return { ok: false, message: err.message || 'Mã OTP không đúng.' };
+        return {
+          ok: false,
+          message: getPhoneOtpErrorMessage(e, 'Mã OTP không đúng.'),
+        };
       } finally {
         setVerifying(false);
       }

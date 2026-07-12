@@ -2,7 +2,6 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import AddressSelect2, { type AddressSelection } from '@/components/common/AddressSelect2';
-import ShippingServiceSelect from '@/components/common/ShippingServiceSelect';
 import { AuthFormMessage } from '@/components/auth/AuthFormMessage';
 import { OrderGhtkTrackingCard } from '@/components/orders/OrderGhtkTrackingCard';
 import { Button } from '@/components/ui/button';
